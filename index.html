@@ -10,6 +10,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
+  <!-- HTML2Canvas (JPG rasm yaratish uchun kutubxona) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
   <style>
     :root {
       color-scheme: light;
@@ -69,7 +72,7 @@
       padding: 24px 0 48px; 
     }
 
-    .top { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .top { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
     .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
     
     /* 36-MAKTAB LOGO MARK */
@@ -90,6 +93,8 @@
     .brand-caption { font-size: 15px; color: var(--muted); margin-top: 4px; display: flex; align-items: center; gap: 8px; font-weight: 550; }
     .sync-dot { width: 9px; height: 9px; border-radius: 50%; background: #22c55e; display: inline-block; }
 
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+
     .theme-button { 
       border: 1px solid var(--line); 
       border-radius: 12px; 
@@ -103,9 +108,27 @@
       gap: 10px; 
       white-space: nowrap; 
       font-size: 16px;
-      font-weight: 650;
+      font-weight: 650; 
     }
     .theme-button:hover, .secondary-button:hover { background: var(--surface-soft); }
+
+    .export-btn-main {
+      border: 1px solid var(--primary);
+      border-radius: 12px;
+      background: var(--primary);
+      color: var(--primary-text);
+      padding: 12px 20px;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      white-space: nowrap;
+      font-size: 16px;
+      font-weight: 750;
+      transition: opacity .15s ease;
+    }
+    .export-btn-main:hover { opacity: .88; }
 
     /* KALENDAR PANELI */
     .calendar-panel { 
@@ -319,8 +342,108 @@
     .field input { width: 100%; min-height: 48px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); padding: 12px 14px; font-size: 16px; }
     .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 
+    /* ================= DIALOG / MODAL (RASM YUKLASH) ================= */
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      display: none;
+      place-items: center;
+      padding: 16px;
+    }
+    .dialog-backdrop.open { display: grid; }
+    
+    .dialog-card {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      width: min(100%, 780px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      overflow: hidden;
+      animation: dialogPop .2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes dialogPop {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .dialog-header {
+      padding: 22px 26px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dialog-title { font-size: 24px; font-weight: 850; margin: 0; letter-spacing: -.5px; }
+    .dialog-close {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 26px;
+      line-height: 1;
+      padding: 6px 10px;
+      border-radius: 10px;
+    }
+    .dialog-close:hover { background: var(--surface-soft); color: var(--text); }
+    
+    .dialog-body { padding: 26px; display: grid; gap: 18px; }
+
+    /* EXPORT VARIANT KARTALARI */
+    .export-option-card {
+      background: var(--surface-soft);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      transition: border-color .15s ease, transform .15s ease;
+    }
+    .export-option-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .option-info { min-width: 0; }
+    .option-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+    .option-badge { font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: var(--primary); color: var(--primary-text); }
+    .option-desc { font-size: 15px; color: var(--muted); margin: 0; }
+
+    .download-btn {
+      min-height: 48px;
+      padding: 10px 20px;
+      border-radius: 12px;
+      background: var(--primary);
+      color: var(--primary-text);
+      font-weight: 800;
+      font-size: 15px;
+      white-space: nowrap;
+      border: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity .15s ease;
+    }
+    .download-btn:hover { opacity: .88; }
+    .download-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* YASHIRIN PRINT CANVAS KONTEYNERI (RASM GENERATSIYASI UCHUN) */
+    #hiddenPrintArea {
+      position: fixed;
+      left: -9999px;
+      top: -9999px;
+      width: 1300px;
+      background: #ffffff;
+      color: #111827;
+      padding: 40px;
+      font-family: Inter, system-ui, sans-serif;
+      z-index: -999;
+    }
+
     .footer-note { text-align: center; color: var(--muted); font-size: 14px; margin: 24px 0 0; }
-    .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 12px); opacity: 0; pointer-events: none; padding: 14px 22px; border-radius: 12px; background: var(--primary); color: var(--primary-text); box-shadow: var(--shadow); font-size: 16px; font-weight: 700; transition: .18s ease; z-index: 10; max-width: calc(100vw - 32px); text-align: center; }
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 12px); opacity: 0; pointer-events: none; padding: 14px 24px; border-radius: 14px; background: var(--primary); color: var(--primary-text); box-shadow: var(--shadow); font-size: 17px; font-weight: 750; transition: .18s ease; z-index: 10000; max-width: calc(100vw - 32px); text-align: center; }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
     @media (max-width: 900px) {
@@ -340,6 +463,8 @@
       .lesson-buttons { display: grid; grid-template-columns: 1fr auto; }
       .take-button { min-width: 0; width: 100%; }
       .form-grid, .form-grid-student { grid-template-columns: 1fr; }
+      .export-option-card { flex-direction: column; align-items: stretch; gap: 12px; }
+      .download-btn { width: 100%; justify-content: center; }
     }
   </style>
 </head>
@@ -353,7 +478,16 @@
           <div class="brand-caption"><span class="sync-dot"></span> Firebase ulandi (davomat-9cb5b)</div>
         </div>
       </div>
-      <button class="theme-button" id="themeToggle" type="button" aria-label="Rang rejimini almashtirish"><span id="themeIcon" aria-hidden="true">☾</span><span id="themeLabel">Tungi rejim</span></button>
+      
+      <div class="top-actions">
+        <!-- IMPORT / EXPORT (JPG RASM YUKLASH TUGMASI) -->
+        <button class="export-btn-main" id="openExportBtn" type="button">
+          <span>🖼️</span><span>JPG Yuklash</span>
+        </button>
+        <button class="theme-button" id="themeToggle" type="button" aria-label="Rang rejimini almashtirish">
+          <span id="themeIcon" aria-hidden="true">☾</span><span id="themeLabel">Tungi rejim</span>
+        </button>
+      </div>
     </header>
 
     <section class="calendar-panel" aria-label="Kun tanlash">
@@ -470,6 +604,65 @@
 
     <p class="footer-note">Ma’lumotlar Firebase Realtime Database bulutida real vaqtda saqlanadi.</p>
   </main>
+
+  <!-- ==================== DIALOG OYNA (JPG EXPORT) ==================== -->
+  <div class="dialog-backdrop" id="exportDialog">
+    <div class="dialog-card">
+      <div class="dialog-header">
+        <h2 class="dialog-title">🖼️ Davomatni JPG rasm qilib yuklash</h2>
+        <button class="dialog-close" id="closeExportDialog">&times;</button>
+      </div>
+      <div class="dialog-body">
+        
+        <!-- 1. KUNLIK DAVOMAT -->
+        <div class="export-option-card">
+          <div class="option-info">
+            <div class="option-title">
+              <span>📅 1 Kunlik Davomat</span>
+              <span class="option-badge">KUNLIK</span>
+            </div>
+            <p class="option-desc" id="exportDailyDesc">Tanlangan kun davomat varaqasini JPG rasm qilib yuklash</p>
+          </div>
+          <button class="download-btn" id="btnDownloadDaily" type="button">
+            <span>📥</span><span>Yuklab olish</span>
+          </button>
+        </div>
+
+        <!-- 2. HAFTALIK DAVOMAT -->
+        <div class="export-option-card">
+          <div class="option-info">
+            <div class="option-title">
+              <span>📆 1 Haftalik Davomat</span>
+              <span class="option-badge">HAFTALIK</span>
+            </div>
+            <p class="option-desc" id="exportWeeklyDesc">Haftadagi 6 kunlik to‘liq jadval va statistika (JPG)</p>
+          </div>
+          <button class="download-btn" id="btnDownloadWeekly" type="button">
+            <span>📥</span><span>Yuklab olish</span>
+          </button>
+        </div>
+
+        <!-- 3. OYLIK DAVOMAT -->
+        <div class="export-option-card">
+          <div class="option-info">
+            <div class="option-title">
+              <span>🗓️ 1 Oylik Davomat</span>
+              <span class="option-badge">OYLIK JURNAL</span>
+            </div>
+            <p class="option-desc" id="exportMonthlyDesc">To‘liq oylik sinf davomati jurnali jadvali (JPG)</p>
+          </div>
+          <button class="download-btn" id="btnDownloadMonthly" type="button">
+            <span>📥</span><span>Yuklab olish</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- YASHIRIN RENDER KONTEYNERI -->
+  <div id="hiddenPrintArea"></div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -806,6 +999,314 @@
         document.querySelector('meta[name="theme-color"]').content = dark ? '#161816' : '#f7f7f5';
       }
 
+      // ==================== JPG EKSPORT FUNKSIYALARI ====================
+      function openExportModal() {
+        const dateObj = new Date(`${state.date}T12:00:00`);
+        const formattedDate = new Intl.DateTimeFormat('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' }).format(dateObj);
+        const formattedMonth = new Intl.DateTimeFormat('uz-UZ', { month: 'long', year: 'numeric' }).format(dateObj);
+        
+        $('exportDailyDesc').textContent = `${formattedDate} kunining to‘liq davomati (JPG)`;
+        $('exportWeeklyDesc').textContent = `Ushbu haftaning (Du–Yak) davomat hisoboti (JPG)`;
+        $('exportMonthlyDesc').textContent = `${formattedMonth} oyi uchun to‘liq jurnal davomati (JPG)`;
+
+        $('exportDialog').classList.add('open');
+      }
+
+      function closeExportModal() {
+        $('exportDialog').classList.remove('open');
+      }
+
+      // Rasm qilib yuklab olish umumiy generatori
+      async function generateAndDownloadJpg(htmlContent, filename) {
+        const area = $('hiddenPrintArea');
+        area.innerHTML = htmlContent;
+
+        showToast("JPG rasm tayyorlanmoqda... ⏳");
+
+        try {
+          // html2canvas orqali yuqori sifatli rasmga aylantirish (scale: 2)
+          const canvas = await html2canvas(area, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false
+          });
+
+          // JPG formatda konvertatsiya qilish
+          const link = document.createElement('a');
+          link.download = filename;
+          link.href = canvas.toDataURL('image/jpeg', 0.95);
+          link.click();
+
+          showToast("Rasm yuklab olindi! ✅");
+          closeExportModal();
+        } catch (err) {
+          console.error("JPG export xatosi:", err);
+          showToast("Rasm yaratishda xatolik yuz berdi.");
+        } finally {
+          area.innerHTML = '';
+        }
+      }
+
+      // 1. KUNLIK DAVOMAT (JPG)
+      function exportDailyJpg() {
+        if (!STUDENTS.length) { showToast("O‘quvchilar ro‘yxati bo‘sh!"); return; }
+
+        const dateObj = new Date(`${state.date}T12:00:00`);
+        const formattedDate = new Intl.DateTimeFormat('uz-UZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(dateObj);
+        
+        const attendance = getAttendance(state.date, null);
+        const c = counts(attendance);
+        const percent = STUDENTS.length ? Math.round((c.present / STUDENTS.length) * 100) : 0;
+
+        let rowsHtml = '';
+        STUDENTS.forEach((student, idx) => {
+          const st = attendance[student.id];
+          const isPresent = st === 'present';
+          const isAbsent = st === 'absent';
+          const badge = isPresent 
+            ? `<span style="display:inline-block; padding:6px 16px; border-radius:8px; background:#dcfce7; color:#15803d; font-weight:800; font-size:16px;">✓ BOR</span>`
+            : isAbsent 
+            ? `<span style="display:inline-block; padding:6px 16px; border-radius:8px; background:#fee2e2; color:#b91c1c; font-weight:800; font-size:16px;">✕ YO‘Q</span>`
+            : `<span style="color:#6b7280; font-weight:600; font-size:15px;">—</span>`;
+
+          rowsHtml += `
+            <tr style="border-bottom:1px solid #e5e7eb; background:${idx % 2 === 0 ? '#ffffff' : '#f9fafb'};">
+              <td style="padding:14px 16px; text-align:center; font-weight:800; color:#4b5563; font-size:18px;">${idx + 1}</td>
+              <td style="padding:14px 20px; font-weight:800; color:#111827; font-size:20px;">${escapeHtml(student.name)}</td>
+              <td style="padding:14px 20px; text-align:center;">${badge}</td>
+            </tr>
+          `;
+        });
+
+        const template = `
+          <div style="background:#ffffff; color:#111827; font-family:Inter, system-ui, sans-serif; padding:10px;">
+            <!-- HEADER -->
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #111827; padding-bottom:20px; margin-bottom:25px;">
+              <div>
+                <div style="font-size:32px; font-weight:900; letter-spacing:-0.5px; color:#111827;">36-MAKTAB DAVOMAT HISOBOTI</div>
+                <div style="font-size:20px; color:#4b5563; margin-top:6px; font-weight:700;">Kunlik hisobot: ${formattedDate}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:28px; font-weight:900; color:#15803d;">${percent}% Qatnashish</div>
+                <div style="font-size:16px; color:#6b7280; margin-top:4px; font-weight:600;">Jami: ${STUDENTS.length} ta o‘quvchi</div>
+              </div>
+            </div>
+
+            <!-- STATISTIKA KARTALARI -->
+            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:28px;">
+              <div style="background:#f3f4f6; border:1px solid #e5e7eb; border-radius:14px; padding:16px; text-align:center;">
+                <div style="font-size:15px; font-weight:700; color:#4b5563;">Jami O‘quvchi</div>
+                <div style="font-size:32px; font-weight:900; color:#111827; margin-top:4px;">${STUDENTS.length}</div>
+              </div>
+              <div style="background:#dcfce7; border:1px solid #bbf7d0; border-radius:14px; padding:16px; text-align:center;">
+                <div style="font-size:15px; font-weight:700; color:#166534;">Bor (Kelganlar)</div>
+                <div style="font-size:32px; font-weight:900; color:#15803d; margin-top:4px;">${c.present}</div>
+              </div>
+              <div style="background:#fee2e2; border:1px solid #fecaca; border-radius:14px; padding:16px; text-align:center;">
+                <div style="font-size:15px; font-weight:700; color:#991b1b;">Yo‘q (Kelmaganlar)</div>
+                <div style="font-size:32px; font-weight:900; color:#b91c1c; margin-top:4px;">${c.absent}</div>
+              </div>
+            </div>
+
+            <!-- JADVAL -->
+            <table style="width:100%; border-collapse:collapse; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden;">
+              <thead>
+                <tr style="background:#111827; color:#ffffff;">
+                  <th style="padding:14px 16px; width:70px; text-align:center; font-size:16px; font-weight:800;">№</th>
+                  <th style="padding:14px 20px; text-align:left; font-size:18px; font-weight:800;">O‘quvchining F.I.SH</th>
+                  <th style="padding:14px 20px; width:180px; text-align:center; font-size:18px; font-weight:800;">Davomat Holati</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+
+            <!-- FOOTER -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:35px; padding-top:20px; border-top:1px solid #e5e7eb; font-size:16px; color:#4b5563;">
+              <div>Sinf rahbari imzosi: __________________________</div>
+              <div>Hujjat yaratilgan vaqt: ${new Date().toLocaleDateString('uz-UZ')} ${new Date().toLocaleTimeString('uz-UZ').slice(0,5)}</div>
+            </div>
+          </div>
+        `;
+
+        generateAndDownloadJpg(template, `36-maktab_Davomat_${state.date}.jpg`);
+      }
+
+      // 2. HAFTALIK DAVOMAT (JPG)
+      function exportWeeklyJpg() {
+        if (!STUDENTS.length) { showToast("O‘quvchilar ro‘yxati bo‘sh!"); return; }
+
+        const start = weekStart(state.date);
+        const dayNames = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'];
+        const weekDates = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(start);
+          d.setDate(start.getDate() + i);
+          weekDates.push(localDate(d));
+        }
+
+        const dateRangeStr = `${weekDates[0]} dan ${weekDates[6]} gacha`;
+
+        // Haftaning kunlari bo'yicha sarlavha
+        let theadDays = '';
+        weekDates.forEach((wDate, idx) => {
+          const dayNum = parseInt(wDate.split('-')[2]);
+          theadDays += `<th style="padding:12px 6px; text-align:center; border-left:1px solid #374151; font-size:14px; font-weight:800;">${dayNames[idx].slice(0,4)}<br><span style="font-size:13px; font-weight:600; opacity:0.8;">${dayNum}-okt</span></th>`;
+        });
+
+        let rowsHtml = '';
+        STUDENTS.forEach((student, idx) => {
+          let daysHtml = '';
+          let presentCount = 0;
+          let absentCount = 0;
+
+          weekDates.forEach(wDate => {
+            const att = state.data.attendance[dateAttendanceKey(wDate, null)] || {};
+            const st = att[student.id];
+            if (st === 'present') {
+              presentCount++;
+              daysHtml += `<td style="padding:10px 4px; text-align:center; font-weight:900; color:#15803d; background:#dcfce7; border-left:1px solid #e5e7eb; font-size:16px;">✓</td>`;
+            } else if (st === 'absent') {
+              absentCount++;
+              daysHtml += `<td style="padding:10px 4px; text-align:center; font-weight:900; color:#b91c1c; background:#fee2e2; border-left:1px solid #e5e7eb; font-size:16px;">✕</td>`;
+            } else {
+              daysHtml += `<td style="padding:10px 4px; text-align:center; color:#9ca3af; border-left:1px solid #e5e7eb; font-size:14px;">—</td>`;
+            }
+          });
+
+          rowsHtml += `
+            <tr style="border-bottom:1px solid #e5e7eb; background:${idx % 2 === 0 ? '#ffffff' : '#f9fafb'};">
+              <td style="padding:10px 12px; text-align:center; font-weight:800; color:#4b5563; font-size:16px;">${idx + 1}</td>
+              <td style="padding:10px 16px; font-weight:800; color:#111827; font-size:17px; white-space:nowrap;">${escapeHtml(student.name)}</td>
+              ${daysHtml}
+              <td style="padding:10px 10px; text-align:center; font-weight:900; color:#15803d; border-left:2px solid #e5e7eb; font-size:17px;">${presentCount}</td>
+              <td style="padding:10px 10px; text-align:center; font-weight:900; color:#b91c1c; border-left:1px solid #e5e7eb; font-size:17px;">${absentCount}</td>
+            </tr>
+          `;
+        });
+
+        const template = `
+          <div style="background:#ffffff; color:#111827; font-family:Inter, system-ui, sans-serif; padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #111827; padding-bottom:18px; margin-bottom:20px;">
+              <div>
+                <div style="font-size:30px; font-weight:900; color:#111827;">36-MAKTAB HAFTALIK DAVOMAT JURNALI</div>
+                <div style="font-size:18px; color:#4b5563; margin-top:4px; font-weight:700;">Hafta oralig‘i: ${dateRangeStr}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:22px; font-weight:900; color:#111827;">Jami: ${STUDENTS.length} ta o‘quvchi</div>
+                <div style="font-size:15px; color:#6b7280; font-weight:600;">Haftalik to‘liq jadval</div>
+              </div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; border:1px solid #e5e7eb; font-size:15px;">
+              <thead>
+                <tr style="background:#111827; color:#ffffff;">
+                  <th style="padding:12px 10px; width:50px; text-align:center; font-size:15px; font-weight:800;">№</th>
+                  <th style="padding:12px 16px; text-align:left; font-size:16px; font-weight:800;">O‘quvchining F.I.SH</th>
+                  ${theadDays}
+                  <th style="padding:12px 10px; width:70px; text-align:center; border-left:2px solid #374151; font-size:14px; font-weight:800; background:#065f46;">Jami Bor</th>
+                  <th style="padding:12px 10px; width:70px; text-align:center; border-left:1px solid #374151; font-size:14px; font-weight:800; background:#991b1b;">Jami Yo‘q</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:30px; padding-top:16px; border-top:1px solid #e5e7eb; font-size:15px; color:#4b5563;">
+              <div>Sinf rahbari imzosi: __________________________</div>
+              <div>Hujjat yaratilgan vaqt: ${new Date().toLocaleDateString('uz-UZ')}</div>
+            </div>
+          </div>
+        `;
+
+        generateAndDownloadJpg(template, `36-maktab_Haftalik_Davomat_${weekDates[0]}.jpg`);
+      }
+
+      // 3. OYLIK DAVOMAT (JPG)
+      function exportMonthlyJpg() {
+        if (!STUDENTS.length) { showToast("O‘quvchilar ro‘yxati bo‘sh!"); return; }
+
+        const dateObj = new Date(`${state.date}T12:00:00`);
+        const year = dateObj.getFullYear();
+        const month = dateObj.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const monthTitle = new Intl.DateTimeFormat('uz-UZ', { month: 'long', year: 'numeric' }).format(dateObj);
+
+        let theadDays = '';
+        for (let d = 1; d <= daysInMonth; d++) {
+          theadDays += `<th style="padding:8px 3px; width:26px; text-align:center; border-left:1px solid #374151; font-size:12px; font-weight:800;">${d}</th>`;
+        }
+
+        let rowsHtml = '';
+        STUDENTS.forEach((student, idx) => {
+          let daysHtml = '';
+          let totalPresent = 0;
+
+          for (let d = 1; d <= daysInMonth; d++) {
+            const curDate = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const att = state.data.attendance[dateAttendanceKey(curDate, null)] || {};
+            const st = att[student.id];
+
+            if (st === 'present') {
+              totalPresent++;
+              daysHtml += `<td style="padding:6px 2px; text-align:center; font-weight:900; color:#15803d; background:#dcfce7; border-left:1px solid #e5e7eb; font-size:13px;">+</td>`;
+            } else if (st === 'absent') {
+              daysHtml += `<td style="padding:6px 2px; text-align:center; font-weight:900; color:#b91c1c; background:#fee2e2; border-left:1px solid #e5e7eb; font-size:13px;">-</td>`;
+            } else {
+              daysHtml += `<td style="padding:6px 2px; text-align:center; color:#d1d5db; border-left:1px solid #e5e7eb; font-size:11px;">·</td>`;
+            }
+          }
+
+          rowsHtml += `
+            <tr style="border-bottom:1px solid #e5e7eb; background:${idx % 2 === 0 ? '#ffffff' : '#f9fafb'};">
+              <td style="padding:8px 6px; text-align:center; font-weight:800; color:#4b5563; font-size:14px;">${idx + 1}</td>
+              <td style="padding:8px 12px; font-weight:800; color:#111827; font-size:15px; white-space:nowrap;">${escapeHtml(student.name)}</td>
+              ${daysHtml}
+              <td style="padding:8px 6px; text-align:center; font-weight:900; color:#15803d; border-left:2px solid #e5e7eb; font-size:15px; background:#f0fdf4;">${totalPresent}</td>
+            </tr>
+          `;
+        });
+
+        const template = `
+          <div style="background:#ffffff; color:#111827; font-family:Inter, system-ui, sans-serif; padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #111827; padding-bottom:16px; margin-bottom:18px;">
+              <div>
+                <div style="font-size:28px; font-weight:900; color:#111827;">36-MAKTAB OYLIK DAVOMAT JURNALI</div>
+                <div style="font-size:18px; color:#4b5563; margin-top:4px; font-weight:700;">Davr: ${monthTitle}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:22px; font-weight:900; color:#111827;">Jami: ${STUDENTS.length} nafar o‘quvchi</div>
+                <div style="font-size:14px; color:#6b7280; font-weight:600;">Kunlar: 1 dan ${daysInMonth} gacha</div>
+              </div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; border:1px solid #e5e7eb; font-size:13px;">
+              <thead>
+                <tr style="background:#111827; color:#ffffff;">
+                  <th style="padding:10px 6px; width:40px; text-align:center; font-size:14px; font-weight:800;">№</th>
+                  <th style="padding:10px 12px; text-align:left; font-size:15px; font-weight:800;">O‘quvchining F.I.SH</th>
+                  ${theadDays}
+                  <th style="padding:10px 6px; width:60px; text-align:center; border-left:2px solid #374151; font-size:13px; font-weight:800; background:#065f46;">Jami</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:25px; padding-top:16px; border-top:1px solid #e5e7eb; font-size:15px; color:#4b5563;">
+              <div>Sinf rahbari imzosi: __________________________</div>
+              <div>Hujjat yaratilgan vaqt: ${new Date().toLocaleDateString('uz-UZ')}</div>
+            </div>
+          </div>
+        `;
+
+        generateAndDownloadJpg(template, `36-maktab_Oylik_Davomat_${year}_${month+1}.jpg`);
+      }
+
       // HODISALAR (EVENTS)
       document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => showPage(tab.dataset.page)));
       $('previousWeek').addEventListener('click', () => shiftWeek(-1));
@@ -814,6 +1315,18 @@
 
       $('markAllPresentBtn').addEventListener('click', () => markAll('present', null));
       $('markAllLessonPresentBtn').addEventListener('click', () => markAll('present', state.activeLessonId));
+
+      // DIALOG OCHISH VA YOPISH
+      $('openExportBtn').addEventListener('click', openExportModal);
+      $('closeExportDialog').addEventListener('click', closeExportModal);
+      $('exportDialog').addEventListener('click', (e) => {
+        if (e.target === $('exportDialog')) closeExportModal();
+      });
+
+      // YUKLAB OLISH TUGMALARI
+      $('btnDownloadDaily').addEventListener('click', exportDailyJpg);
+      $('btnDownloadWeekly').addEventListener('click', exportWeeklyJpg);
+      $('btnDownloadMonthly').addEventListener('click', exportMonthlyJpg);
 
       document.body.addEventListener('click', event => {
         const dayCard = event.target.closest('[data-day]');
