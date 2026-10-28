@@ -334,7 +334,7 @@
     .empty-title { font-size: 20px; font-weight: 800; }
     .empty-text { color: var(--muted); font-size: 16px; margin: 8px 0 20px; }
 
-    .lesson-attendance-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--line); }
+    .lesson-attendance-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
     .back-button { border: 0; padding: 8px 0; color: var(--muted); background: transparent; font-weight: 750; font-size: 16px; }
     .back-button:hover { color: var(--text); }
     .current-lesson-title { margin: 6px 0 0; font-size: 26px; letter-spacing: -.6px; font-weight: 850; }
@@ -351,7 +351,7 @@
     .field input { width: 100%; min-height: 48px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); padding: 12px 14px; font-size: 16px; }
     .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 
-    /* ================= DIALOG / MODAL (RASM YUKLASH VA SABAB KIRITISH) ================= */
+    /* ================= DIALOG / MODAL ================= */
     .dialog-backdrop {
       position: fixed;
       inset: 0;
@@ -369,7 +369,10 @@
       color: var(--text);
       border: 1px solid var(--line);
       border-radius: 20px;
-      width: min(100%, 780px);
+      width: min(100%, 860px);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
       box-shadow: 0 20px 40px rgba(0,0,0,0.3);
       overflow: hidden;
       animation: dialogPop .2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -399,7 +402,7 @@
     }
     .dialog-close:hover { background: var(--surface-soft); color: var(--text); }
     
-    .dialog-body { padding: 26px; display: grid; gap: 18px; }
+    .dialog-body { padding: 26px; display: grid; gap: 18px; overflow-y: auto; }
 
     /* EXPORT VARIANT KARTALARI */
     .export-option-card {
@@ -415,7 +418,6 @@
     }
     .export-option-card:hover {
       border-color: var(--primary);
-      transform: translateY(-2px);
     }
     .option-info { min-width: 0; }
     .option-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
@@ -438,6 +440,20 @@
       transition: opacity .15s ease;
     }
     .download-btn:hover { opacity: .88; }
+
+    /* FANLAR RO'YXATI KARTALARI */
+    .lesson-item-box {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .lesson-item-title { font-weight: 800; font-size: 16px; color: var(--text); }
+    .lesson-item-time { font-size: 13px; color: var(--muted); font-weight: 600; }
 
     /* SABABLI TEZKOR VARIANTLARI */
     .reason-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 14px; }
@@ -607,7 +623,12 @@
 
       <!-- DARS BO'YICHA DAVOMAT KO'RINIShI -->
       <div id="lessonAttendanceView" hidden>
-        <div style="margin-bottom:16px"><button class="back-button" id="backToLessons" type="button">← Darslar ro‘yxatiga qaytish</button></div>
+        <div style="margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <button class="back-button" id="backToLessons" type="button">← Darslar ro‘yxatiga qaytish</button>
+          <button class="primary-button" id="exportCurrentLessonBtn" type="button" style="min-height:42px; padding:8px 16px; font-size:15px;">
+            🖼️ Shu fanning davomatini JPG yuklash
+          </button>
+        </div>
         <div class="surface">
           <div class="lesson-attendance-head">
             <div>
@@ -667,12 +688,12 @@
       </div>
       <div class="dialog-body">
         
-        <!-- 1. KUNLIK DAVOMAT (FANLAR NOMI BILAN) -->
+        <!-- 1. KUNLIK DAVOMAT (UMUMIY) -->
         <div class="export-option-card">
           <div class="option-info">
             <div class="option-title">
-              <span>📅 1 Kunlik Davomat</span>
-              <span class="option-badge">LANDSCAPE • FANLAR NOMI</span>
+              <span>📅 1 Kunlik Umumiy Davomat</span>
+              <span class="option-badge">BARCHA FANLAR BILAN</span>
             </div>
             <p class="option-desc" id="exportDailyDesc">Kunning barcha darslari, fanlar nomlari va davomat holati (JPG)</p>
           </div>
@@ -681,7 +702,21 @@
           </button>
         </div>
 
-        <!-- 2. HAFTALIK DAVOMAT -->
+        <!-- 2. HAR BIR FAN BO'YICHA ALOHIDA HISOBOT -->
+        <div class="export-option-card" style="flex-direction:column; align-items:stretch; gap:14px;">
+          <div class="option-info">
+            <div class="option-title">
+              <span>📖 Har Bir Fan Davomatini Alohida Yuklash</span>
+              <span class="option-badge" style="background:#0284c7;">FANLAR BO‘YICHA</span>
+            </div>
+            <p class="option-desc">Kerakli fanni tanlang va uning davomatini alohida JPG rasm qilib oling:</p>
+          </div>
+          <div id="subjectDownloadList" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:10px;">
+            <!-- Dinamik fanlar tugmalari joylashadi -->
+          </div>
+        </div>
+
+        <!-- 3. HAFTALIK DAVOMAT -->
         <div class="export-option-card">
           <div class="option-info">
             <div class="option-title">
@@ -695,7 +730,7 @@
           </button>
         </div>
 
-        <!-- 3. OYLIK DAVOMAT -->
+        <!-- 4. OYLIK DAVOMAT -->
         <div class="export-option-card">
           <div class="option-info">
             <div class="option-title">
@@ -738,7 +773,7 @@
       const db = firebase.database();
 
       // 2. STATE (HOLAT)
-      let STUDENTS = []; // Firebase-dan yuklanadi
+      let STUDENTS = [];
       const THEME_KEY = 'sinfly-theme-v2';
       const today = new Date();
       const localDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -759,7 +794,6 @@
 
       // 3. FIREBASE BILAN REAL-TIME SINXRONIZATSIYA
       function initFirebaseSync() {
-        // O'quvchilarni tinglash
         db.ref('students').on('value', snapshot => {
           const val = snapshot.val();
           STUDENTS = [];
@@ -772,13 +806,11 @@
           render();
         });
 
-        // Darslarni tinglash
         db.ref('lessons').on('value', snapshot => {
           state.data.lessons = snapshot.val() || {};
           render();
         });
 
-        // Davomatni tinglash
         db.ref('attendance').on('value', snapshot => {
           state.data.attendance = snapshot.val() || {};
           render();
@@ -798,7 +830,6 @@
         return state.data.attendance[key] || {}; 
       }
 
-      // Statusni olish (obyekt yoki oddiy string formatini qo'llab-quvvatlaydi)
       function getStudentStatusInfo(rec) {
         if (!rec) return { status: '', reason: '' };
         if (typeof rec === 'object') {
@@ -812,7 +843,6 @@
         const currentRec = (state.data.attendance[key] && state.data.attendance[key][studentId]) || null;
         const currentInfo = getStudentStatusInfo(currentRec);
         
-        // Agar o'sha holat ustiga qayta bossa (sabablidan tashqari), bekor qiladi
         if (currentInfo.status === status && status !== 'excused') {
           db.ref(`attendance/${key}/${studentId}`).remove();
         } else {
@@ -929,7 +959,6 @@
 
           return `<div class="student">
             <div class="student-main">
-              <!-- TARTIB RAQAMI (1, 2, 3...) -->
               <div class="student-index" aria-hidden="true">${idx + 1}</div>
               <div>
                 <div class="student-name">${escapeHtml(student.name)}</div>
@@ -937,13 +966,9 @@
               </div>
             </div>
             <div class="actions" role="group" aria-label="${escapeHtml(student.name)} davomatini belgilang">
-              <!-- BOR -->
               <button type="button" class="status-button present ${info.status === 'present' ? 'active' : ''}" aria-pressed="${info.status === 'present'}" data-student="${student.id}" data-status="present" ${lessonId ? `data-lesson="${escapeHtml(lessonId)}"` : ''}>✓ Bor</button>
-              <!-- YO'Q -->
               <button type="button" class="status-button absent ${info.status === 'absent' ? 'active' : ''}" aria-pressed="${info.status === 'absent'}" data-student="${student.id}" data-status="absent" ${lessonId ? `data-lesson="${escapeHtml(lessonId)}"` : ''}>✕ Yo‘q</button>
-              <!-- SABABLI -->
               <button type="button" class="status-button excused ${info.status === 'excused' ? 'active' : ''}" aria-pressed="${info.status === 'excused'}" data-open-excuse="${student.id}" data-student-name="${escapeHtml(student.name)}" ${lessonId ? `data-lesson="${escapeHtml(lessonId)}"` : ''}>⏳ Sababli</button>
-              <!-- O'CHIRISH -->
               <button type="button" class="delete-student-btn" data-delete-student="${student.id}" data-student-name="${escapeHtml(student.name)}" title="O‘quvchini o‘chirish">✕</button>
             </div>
           </div>`;
@@ -985,7 +1010,15 @@
               <div class="lesson-name">${escapeHtml(lesson.name)}</div>
               <div class="lesson-progress"><strong style="color:var(--present)">Bor: ${c.present}</strong> · <strong style="color:var(--absent)">Yo‘q: ${c.absent}</strong>${c.excused ? ` · <strong style="color:var(--excused)">Sababli: ${c.excused}</strong>` : ''} · ${allMarked ? 'Davomat tugallandi' : `Belgilandi: <strong>${STUDENTS.length-c.pending}/${STUDENTS.length}</strong>`}</div>
             </div>
-            <div class="lesson-buttons"><button type="button" class="primary-button take-button" data-open-lesson="${escapeHtml(lesson.id)}">Davomatni belgilash →</button><button type="button" class="delete-lesson" data-delete-lesson="${escapeHtml(lesson.id)}">Darsni o‘chirish</button></div>
+            <div class="lesson-buttons">
+              <button type="button" class="primary-button take-button" data-open-lesson="${escapeHtml(lesson.id)}">Davomatni belgilash →</button>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                <button type="button" class="secondary-button" data-export-direct-lesson="${escapeHtml(lesson.id)}" style="min-height:36px; padding:6px 12px; font-size:13px; font-weight:750;">
+                  🖼️ JPG Yuklash
+                </button>
+                <button type="button" class="delete-lesson" data-delete-lesson="${escapeHtml(lesson.id)}">Darsni o‘chirish</button>
+              </div>
+            </div>
           </article>`;
         }).join('');
       }
@@ -1125,9 +1158,33 @@
         const formattedDate = new Intl.DateTimeFormat('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' }).format(dateObj);
         const formattedMonth = new Intl.DateTimeFormat('uz-UZ', { month: 'long', year: 'numeric' }).format(dateObj);
         
-        $('exportDailyDesc').textContent = `${formattedDate} kungi darslar, fanlar nomi va davomat (Landscape JPG)`;
+        $('exportDailyDesc').textContent = `${formattedDate} kungi barcha darslar va davomat (Landscape JPG)`;
         $('exportWeeklyDesc').textContent = `Haftadagi 6 kunlik to‘liq albom jurnali va fanlar (Landscape JPG)`;
         $('exportMonthlyDesc').textContent = `${formattedMonth} oyi to‘liq davomat jurnali (Landscape JPG)`;
+
+        // Fanlar bo'yicha alohida yuklash ro'yxatini to'ldirish
+        const lessons = currentLessons().slice().sort((a,b) => a.start.localeCompare(b.start));
+        const listContainer = $('subjectDownloadList');
+        listContainer.innerHTML = '';
+
+        if (!lessons.length) {
+          listContainer.innerHTML = `<div style="grid-column:1/-1; color:var(--muted); font-size:14px; padding:10px 0;">Bu kunga darslar qo‘shilmagan.</div>`;
+        } else {
+          lessons.forEach((lesson, i) => {
+            const div = document.createElement('div');
+            div.className = 'lesson-item-box';
+            div.innerHTML = `
+              <div>
+                <div class="lesson-item-title">${i+1}. ${escapeHtml(lesson.name)}</div>
+                <div class="lesson-item-time">${escapeHtml(lesson.start)} – ${escapeHtml(lesson.end)}</div>
+              </div>
+              <button type="button" class="download-btn" style="min-height:38px; padding:6px 14px; font-size:13px;" onclick="window.exportSingleLessonJpg('${lesson.id}')">
+                <span>📥</span><span>Yuklash</span>
+              </button>
+            `;
+            listContainer.appendChild(div);
+          });
+        }
 
         $('exportDialog').classList.add('open');
       }
@@ -1136,7 +1193,6 @@
         $('exportDialog').classList.remove('open');
       }
 
-      // Rasm qilib yuklab olish umumiy generatori (LANDSCAPE: scale 2)
       async function generateAndDownloadJpg(htmlContent, filename) {
         const area = $('hiddenPrintArea');
         area.innerHTML = htmlContent;
@@ -1166,43 +1222,13 @@
         }
       }
 
-      // 1. KUNLIK DAVOMAT (LANDSCAPE + FANLAR NOMI + SABABLI)
-      function exportDailyJpg() {
-        if (!STUDENTS.length) { showToast("O‘quvchilar ro‘yxati bo‘sh!"); return; }
-
-        const dateObj = new Date(`${state.date}T12:00:00`);
-        const formattedDate = new Intl.DateTimeFormat('uz-UZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(dateObj);
-        
-        const lessons = currentLessons().slice().sort((a,b) => a.start.localeCompare(b.start));
-        const attendance = getAttendance(state.date, null);
-        const c = counts(attendance);
-        const percent = STUDENTS.length ? Math.round((c.present / STUDENTS.length) * 100) : 0;
-
-        // Fanlar banneri
-        let lessonsBannerHtml = '';
-        if (lessons.length) {
-          lessonsBannerHtml = `
-            <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:14px; padding:16px 20px; margin-bottom:24px;">
-              <div style="font-size:16px; font-weight:800; color:#334155; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
-                📚 Bugungi Darslar Jadvali (2-smena):
-              </div>
-              <div style="display:flex; flex-wrap:wrap; gap:12px;">
-                ${lessons.map((l, i) => `
-                  <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:8px 14px; font-size:15px; font-weight:750; color:#0f172a;">
-                    <span style="color:#64748b;">${i+1}.</span> ${escapeHtml(l.name)} <span style="font-size:13px; color:#64748b; font-weight:600;">(${l.start}–${l.end})</span>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          `;
-        }
-
-        // O'quvchilar ro'yxatini 2 ta ustunga bo'lib chiqaramiz (Landscape da mukammal sig'ishi uchun)
+      // O'quvchilar ro'yxatini 2 ustunga bo'lib beruvchi yordamchi funksiya
+      function buildTwoColumnTable(attendance) {
         const half = Math.ceil(STUDENTS.length / 2);
         const col1 = STUDENTS.slice(0, half);
         const col2 = STUDENTS.slice(half);
 
-        const renderTableColumn = (list, startIndex) => {
+        const renderCol = (list, startIndex) => {
           let rows = '';
           list.forEach((student, i) => {
             const idx = startIndex + i;
@@ -1227,9 +1253,64 @@
           return rows;
         };
 
+        return `
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+            <table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; border-radius:12px; overflow:hidden;">
+              <thead>
+                <tr style="background:#0f172a; color:#ffffff;">
+                  <th style="padding:12px 10px; width:60px; text-align:center; font-size:15px; font-weight:800;">№</th>
+                  <th style="padding:12px 16px; text-align:left; font-size:16px; font-weight:800;">O‘quvchining F.I.SH</th>
+                  <th style="padding:12px 14px; width:170px; text-align:center; font-size:16px; font-weight:800;">Holati</th>
+                </tr>
+              </thead>
+              <tbody>${renderCol(col1, 0)}</tbody>
+            </table>
+            <table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; border-radius:12px; overflow:hidden;">
+              <thead>
+                <tr style="background:#0f172a; color:#ffffff;">
+                  <th style="padding:12px 10px; width:60px; text-align:center; font-size:15px; font-weight:800;">№</th>
+                  <th style="padding:12px 16px; text-align:left; font-size:16px; font-weight:800;">O‘quvchining F.I.SH</th>
+                  <th style="padding:12px 14px; width:170px; text-align:center; font-size:16px; font-weight:800;">Holati</th>
+                </tr>
+              </thead>
+              <tbody>${renderCol(col2, half)}</tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      // 1. KUNLIK UMUMIY DAVOMAT (LANDSCAPE)
+      function exportDailyJpg() {
+        if (!STUDENTS.length) { showToast("O‘quvchilar ro‘yxati bo‘sh!"); return; }
+
+        const dateObj = new Date(`${state.date}T12:00:00`);
+        const formattedDate = new Intl.DateTimeFormat('uz-UZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(dateObj);
+        
+        const lessons = currentLessons().slice().sort((a,b) => a.start.localeCompare(b.start));
+        const attendance = getAttendance(state.date, null);
+        const c = counts(attendance);
+        const percent = STUDENTS.length ? Math.round((c.present / STUDENTS.length) * 100) : 0;
+
+        let lessonsBannerHtml = '';
+        if (lessons.length) {
+          lessonsBannerHtml = `
+            <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:14px; padding:16px 20px; margin-bottom:24px;">
+              <div style="font-size:16px; font-weight:800; color:#334155; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
+                📚 Bugungi Darslar Jadvali (2-smena):
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                ${lessons.map((l, i) => `
+                  <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:8px 14px; font-size:15px; font-weight:750; color:#0f172a;">
+                    <span style="color:#64748b;">${i+1}.</span> ${escapeHtml(l.name)} <span style="font-size:13px; color:#64748b; font-weight:600;">(${l.start}–${l.end})</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
         const template = `
           <div style="background:#ffffff; color:#0f172a; font-family:Inter, system-ui, sans-serif; padding:10px;">
-            <!-- YUQORI QISM -->
             <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #0f172a; padding-bottom:18px; margin-bottom:20px;">
               <div>
                 <div style="font-size:34px; font-weight:900; letter-spacing:-0.5px; color:#0f172a;">36-MAKTAB KUNLIK DAVOMAT HISOBOTI</div>
@@ -1255,37 +1336,9 @@
               </div>
             </div>
 
-            <!-- FANLAR NOMI BANNERI -->
             ${lessonsBannerHtml}
+            ${buildTwoColumnTable(attendance)}
 
-            <!-- 2 USTUNLI JADVAL (LANDSCAPE) -->
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
-              <!-- 1-ustun -->
-              <table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; border-radius:12px; overflow:hidden;">
-                <thead>
-                  <tr style="background:#0f172a; color:#ffffff;">
-                    <th style="padding:12px 10px; width:60px; text-align:center; font-size:15px; font-weight:800;">№</th>
-                    <th style="padding:12px 16px; text-align:left; font-size:16px; font-weight:800;">O‘quvchining F.I.SH</th>
-                    <th style="padding:12px 14px; width:160px; text-align:center; font-size:16px; font-weight:800;">Holati</th>
-                  </tr>
-                </thead>
-                <tbody>${renderTableColumn(col1, 0)}</tbody>
-              </table>
-
-              <!-- 2-ustun -->
-              <table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; border-radius:12px; overflow:hidden;">
-                <thead>
-                  <tr style="background:#0f172a; color:#ffffff;">
-                    <th style="padding:12px 10px; width:60px; text-align:center; font-size:15px; font-weight:800;">№</th>
-                    <th style="padding:12px 16px; text-align:left; font-size:16px; font-weight:800;">O‘quvchining F.I.SH</th>
-                    <th style="padding:12px 14px; width:160px; text-align:center; font-size:16px; font-weight:800;">Holati</th>
-                  </tr>
-                </thead>
-                <tbody>${renderTableColumn(col2, half)}</tbody>
-              </table>
-            </div>
-
-            <!-- FOOTER -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:30px; padding-top:18px; border-top:1px solid #cbd5e1; font-size:16px; color:#475569;">
               <div>Sinf rahbari imzosi: __________________________</div>
               <div>Hujjat yaratilgan vaqt: ${new Date().toLocaleDateString('uz-UZ')} ${new Date().toLocaleTimeString('uz-UZ').slice(0,5)}</div>
@@ -1296,14 +1349,72 @@
         generateAndDownloadJpg(template, `36-maktab_Landscape_Davomat_${state.date}.jpg`);
       }
 
-      // 2. HAFTALIK DAVOMAT (LANDSCAPE + FANLAR NOMI + SABABLI)
+      // 2. HAR BIR FAN (DARS) UCHUN ALOHIDA HISOBOT (LANDSCAPE)
+      window.exportSingleLessonJpg = function(lessonId) {
+        if (!STUDENTS.length) { showToast("O‘quvchilar ro‘yxati bo‘sh!"); return; }
+        
+        const lesson = currentLessons().find(l => l.id === lessonId);
+        if (!lesson) { showToast("Dars topilmadi!"); return; }
+
+        const dateObj = new Date(`${state.date}T12:00:00`);
+        const formattedDate = new Intl.DateTimeFormat('uz-UZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(dateObj);
+        
+        const attendance = getAttendance(state.date, lesson.id);
+        const c = counts(attendance);
+        const percent = STUDENTS.length ? Math.round((c.present / STUDENTS.length) * 100) : 0;
+
+        const template = `
+          <div style="background:#ffffff; color:#0f172a; font-family:Inter, system-ui, sans-serif; padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #0f172a; padding-bottom:18px; margin-bottom:24px;">
+              <div>
+                <div style="font-size:34px; font-weight:900; letter-spacing:-0.5px; color:#0f172a;">36-MAKTAB FAN DAVOMATI HISOBOTI</div>
+                <div style="font-size:22px; color:#0369a1; margin-top:6px; font-weight:850;">
+                  Fan: ${escapeHtml(lesson.name)} <span style="color:#475569; font-weight:700;">(${lesson.start} – ${lesson.end})</span>
+                </div>
+                <div style="font-size:17px; color:#64748b; margin-top:4px; font-weight:600;">Sana: ${formattedDate} • 2-smena</div>
+              </div>
+              <div style="display:flex; gap:16px; align-items:center;">
+                <div style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:12px; padding:10px 18px; text-align:center;">
+                  <div style="font-size:13px; font-weight:700; color:#64748b;">QATNASHISH</div>
+                  <div style="font-size:26px; font-weight:900; color:#15803d;">${percent}%</div>
+                </div>
+                <div style="background:#dcfce7; border:1px solid #86efac; border-radius:12px; padding:10px 18px; text-align:center;">
+                  <div style="font-size:13px; font-weight:700; color:#166534;">BOR</div>
+                  <div style="font-size:26px; font-weight:900; color:#15803d;">${c.present}</div>
+                </div>
+                <div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:12px; padding:10px 18px; text-align:center;">
+                  <div style="font-size:13px; font-weight:700; color:#991b1b;">YO‘Q</div>
+                  <div style="font-size:26px; font-weight:900; color:#b91c1c;">${c.absent}</div>
+                </div>
+                <div style="background:#fef9c3; border:1px solid #fde047; border-radius:12px; padding:10px 18px; text-align:center;">
+                  <div style="font-size:13px; font-weight:700; color:#854d0e;">SABABLI</div>
+                  <div style="font-size:26px; font-weight:900; color:#a16207;">${c.excused}</div>
+                </div>
+              </div>
+            </div>
+
+            ${buildTwoColumnTable(attendance)}
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:35px; padding-top:18px; border-top:1px solid #cbd5e1; font-size:16px; color:#475569;">
+              <div>Fan o‘qituvchisi imzosi: __________________________</div>
+              <div>Sinf rahbari imzosi: __________________________</div>
+              <div>Hujjat vaqti: ${new Date().toLocaleDateString('uz-UZ')} ${new Date().toLocaleTimeString('uz-UZ').slice(0,5)}</div>
+            </div>
+          </div>
+        `;
+
+        const cleanLessonName = lesson.name.replace(/[^a-zA-Z0-9а-яА-ЯёЁ_]/g, '_');
+        generateAndDownloadJpg(template, `36-maktab_${cleanLessonName}_Davomat_${state.date}.jpg`);
+      };
+
+      // 3. HAFTALIK DAVOMAT (LANDSCAPE)
       function exportWeeklyJpg() {
         if (!STUDENTS.length) { showToast("O‘quvchilar ro‘yxati bo‘sh!"); return; }
 
         const start = weekStart(state.date);
         const dayNames = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
         const weekDates = [];
-        for (let i = 0; i < 6; i++) { // Du-Sha (6 kun)
+        for (let i = 0; i < 6; i++) {
           const d = new Date(start);
           d.setDate(start.getDate() + i);
           weekDates.push(localDate(d));
@@ -1311,7 +1422,6 @@
 
         const dateRangeStr = `${weekDates[0]} dan ${weekDates[5]} gacha`;
 
-        // Har bir kunga fanlar nomini yig'amiz
         let theadDays = '';
         weekDates.forEach((wDate, idx) => {
           const dayNum = parseInt(wDate.split('-')[2]);
@@ -1401,7 +1511,7 @@
         generateAndDownloadJpg(template, `36-maktab_Haftalik_Landscape_${weekDates[0]}.jpg`);
       }
 
-      // 3. OYLIK DAVOMAT (LANDSCAPE)
+      // 4. OYLIK DAVOMAT (LANDSCAPE)
       function exportMonthlyJpg() {
         if (!STUDENTS.length) { showToast("O‘quvchilar ro‘yxati bo‘sh!"); return; }
 
@@ -1508,9 +1618,20 @@
       $('btnDownloadWeekly').addEventListener('click', exportWeeklyJpg);
       $('btnDownloadMonthly').addEventListener('click', exportMonthlyJpg);
 
+      $('exportCurrentLessonBtn').addEventListener('click', () => {
+        if (state.activeLessonId) window.exportSingleLessonJpg(state.activeLessonId);
+      });
+
       document.body.addEventListener('click', event => {
         const dayCard = event.target.closest('[data-day]');
         if (dayCard) { selectDate(dayCard.dataset.day); return; }
+
+        // BEVOSITA DARS KARTASIDAN JPG YUKLASH
+        const directExportBtn = event.target.closest('[data-export-direct-lesson]');
+        if (directExportBtn) {
+          window.exportSingleLessonJpg(directExportBtn.dataset.exportDirectLesson);
+          return;
+        }
 
         // SABABLI BOSILGANDA
         const excuseBtn = event.target.closest('[data-open-excuse]');
