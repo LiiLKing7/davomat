@@ -10,7 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
-  <!-- HTML2Canvas (JPG rasm yaratish uchun kutubxona) -->
+  <!-- HTML2Canvas (JPG rasm yaratish uchun) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
@@ -30,6 +30,9 @@
       --absent: #b52921;
       --absent-bg: #feebe8;
       --absent-line: #f4b4ad;
+      --excused: #9a6700;
+      --excused-bg: #fef9c3;
+      --excused-line: #fde047;
       --focus: #3b76e1;
       --shadow: 0 4px 16px rgba(20, 30, 20, .06);
     }
@@ -49,6 +52,9 @@
       --absent: #ffaaa3;
       --absent-bg: #442220;
       --absent-line: #73332e;
+      --excused: #fde047;
+      --excused-bg: #423508;
+      --excused-line: #71550c;
       --focus: #8ab0ff;
       --shadow: 0 4px 14px rgba(0, 0, 0, .2);
     }
@@ -185,6 +191,7 @@
     .day-counts { font-size: 14px; color: var(--muted); line-height: 1.4; margin-top: auto; padding-top: 6px; }
     .day-counts .day-present { color: var(--present); font-weight: 800; }
     .day-counts .day-absent { color: var(--absent); font-weight: 800; }
+    .day-counts .day-excused { color: var(--excused); font-weight: 800; }
     .day-lessons { color: var(--muted); font-size: 13px; font-weight: 600; line-height: 1.2; padding-top: 3px; }
 
     /* TABLAR */
@@ -247,22 +254,23 @@
     }
     .student-state { color: var(--muted); font-size: 15px; margin-top: 4px; font-weight: 600; }
 
-    /* TUGMALAR (KATTA VA QULAY) */
-    .actions { display: flex; align-items: center; gap: 10px; }
+    /* TUGMALAR (BOR / YO'Q / SABABLI) */
+    .actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .status-button { 
       border: 1px solid var(--line); 
       border-radius: 12px; 
-      min-width: 108px; 
+      min-width: 96px; 
       min-height: 50px; 
-      padding: 10px 18px; 
+      padding: 10px 14px; 
       background: var(--surface); 
       color: var(--muted); 
       font-weight: 800; 
-      font-size: 17px;
+      font-size: 16px;
     }
     .status-button:hover { background: var(--surface-soft); }
     .status-button.present.active { color: var(--present); background: var(--present-bg); border-color: var(--present-line); }
     .status-button.absent.active { color: var(--absent); background: var(--absent-bg); border-color: var(--absent-line); }
+    .status-button.excused.active { color: var(--excused); background: var(--excused-bg); border-color: var(--excused-line); }
     
     .delete-student-btn { 
       border: 0; 
@@ -280,6 +288,7 @@
     .summary b { color: var(--text); font-size: 18px; font-weight: 850; }
     .summary .good { color: var(--present); }
     .summary .bad { color: var(--absent); }
+    .summary .warn { color: var(--excused); }
 
     .page { display: none; }
     .page.active { display: block; }
@@ -312,7 +321,7 @@
     }
     .lesson-topline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
     .lesson-number { font-size: 14px; font-weight: 800; padding: 4px 10px; border-radius: 8px; background: var(--surface-soft); color: var(--muted); }
-    .lesson-time { color: var(--muted); font-size: 15px; font-weight: 700; }
+    .lesson-time { color: var(--muted); font-size: 16px; font-weight: 750; }
     .lesson-name { font-weight: 800; font-size: 22px; overflow-wrap: anywhere; }
     .lesson-progress { color: var(--muted); font-size: 15px; margin-top: 8px; font-weight: 600; }
     .lesson-progress strong { color: var(--text); font-weight: 800; }
@@ -342,7 +351,7 @@
     .field input { width: 100%; min-height: 48px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); padding: 12px 14px; font-size: 16px; }
     .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 
-    /* ================= DIALOG / MODAL (RASM YUKLASH) ================= */
+    /* ================= DIALOG / MODAL (RASM YUKLASH VA SABAB KIRITISH) ================= */
     .dialog-backdrop {
       position: fixed;
       inset: 0;
@@ -365,6 +374,8 @@
       overflow: hidden;
       animation: dialogPop .2s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    .dialog-card-sm { width: min(100%, 520px); }
+
     @keyframes dialogPop {
       from { transform: scale(0.95); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
@@ -427,17 +438,29 @@
       transition: opacity .15s ease;
     }
     .download-btn:hover { opacity: .88; }
-    .download-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-    /* YASHIRIN PRINT CANVAS KONTEYNERI (RASM GENERATSIYASI UCHUN) */
+    /* SABABLI TEZKOR VARIANTLARI */
+    .reason-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 14px; }
+    .reason-pill {
+      border: 1px solid var(--line);
+      background: var(--surface-soft);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .reason-pill:hover { border-color: var(--primary); background: var(--surface); }
+
+    /* YASHIRIN LANDSCAPE PRINT KONTEYNERI (1750px kenglik) */
     #hiddenPrintArea {
       position: fixed;
       left: -9999px;
       top: -9999px;
-      width: 1300px;
+      width: 1750px;
       background: #ffffff;
       color: #111827;
-      padding: 40px;
+      padding: 36px 44px;
       font-family: Inter, system-ui, sans-serif;
       z-index: -999;
     }
@@ -457,8 +480,8 @@
       .day-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
       .student { grid-template-columns: minmax(0,1fr); gap: 12px; }
       .student-name { font-size: 18px; }
-      .actions { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; width: 100%; }
-      .status-button { min-width: 0; width: 100%; min-height: 48px; }
+      .actions { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 6px; width: 100%; }
+      .status-button { min-width: 0; width: 100%; min-height: 48px; font-size: 14px; padding: 8px 4px; }
       .lesson-card { grid-template-columns: minmax(0,1fr); }
       .lesson-buttons { display: grid; grid-template-columns: 1fr auto; }
       .take-button { min-width: 0; width: 100%; }
@@ -475,14 +498,14 @@
         <div class="brand-mark" aria-hidden="true">36</div>
         <div>
           <div class="brand-name">36-maktab</div>
-          <div class="brand-caption"><span class="sync-dot"></span> Firebase ulandi (davomat-9cb5b)</div>
+          <div class="brand-caption"><span class="sync-dot"></span> Firebase ulandi (davomat-9cb5b) • 2-smena (13:10)</div>
         </div>
       </div>
       
       <div class="top-actions">
-        <!-- IMPORT / EXPORT (JPG RASM YUKLASH TUGMASI) -->
+        <!-- JPG EKSPORT TUGMASI -->
         <button class="export-btn-main" id="openExportBtn" type="button">
-          <span>🖼️</span><span>JPG Yuklash</span>
+          <span>🖼️</span><span>JPG Yuklash (Landscape)</span>
         </button>
         <button class="theme-button" id="themeToggle" type="button" aria-label="Rang rejimini almashtirish">
           <span id="themeIcon" aria-hidden="true">☾</span><span id="themeLabel">Tungi rejim</span>
@@ -515,7 +538,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:16px;">
         <div>
           <h1 class="page-heading">O‘quvchilar davomatini belgilang</h1>
-          <p class="page-help" style="margin-bottom:0">Har bir o‘quvchi uchun “Bor” yoki “Yo‘q” tugmasini bosing.</p>
+          <p class="page-help" style="margin-bottom:0">Har bir o‘quvchi uchun “Bor”, “Yo‘q” yoki “Sababli” tugmasini bosing.</p>
         </div>
         <button class="primary-button" id="showAddStudent" type="button">＋ O‘quvchi qo‘shish</button>
       </div>
@@ -559,19 +582,19 @@
       <div id="scheduleListView">
         <div class="schedule-toolbar">
           <div>
-            <h1 class="page-heading">Kunlik dars rejasi</h1>
+            <h1 class="page-heading">Kunlik dars rejasi (2-smena, 13:10 dan)</h1>
             <p class="page-help" style="margin-bottom:0">Darsni tanlang va shu dars uchun davomat qiling.</p>
           </div>
           <button class="primary-button" id="showAddLesson" type="button">＋ Dars qo‘shish</button>
         </div>
 
-        <!-- DARS QO'SHISH FORMASI -->
+        <!-- DARS QO'SHISH FORMASI (STANDART 13:10) -->
         <form class="form-wrap" id="lessonForm">
-          <div class="form-title">Yangi dars</div>
+          <div class="form-title">Yangi dars qo‘shish</div>
           <div class="form-grid">
             <div class="field"><label for="lessonName">Fan nomi</label><input id="lessonName" name="lessonName" placeholder="Masalan, Matematika" maxlength="60" required></div>
-            <div class="field"><label for="lessonStart">Boshlanishi</label><input id="lessonStart" name="lessonStart" type="time" value="08:30" required></div>
-            <div class="field"><label for="lessonEnd">Tugashi</label><input id="lessonEnd" name="lessonEnd" type="time" value="09:15" required></div>
+            <div class="field"><label for="lessonStart">Boshlanishi</label><input id="lessonStart" name="lessonStart" type="time" value="13:10" required></div>
+            <div class="field"><label for="lessonEnd">Tugashi</label><input id="lessonEnd" name="lessonEnd" type="time" value="13:55" required></div>
           </div>
           <div class="form-actions">
             <button class="secondary-button" id="cancelAddLesson" type="button">Bekor qilish</button>
@@ -605,23 +628,53 @@
     <p class="footer-note">Ma’lumotlar Firebase Realtime Database bulutida real vaqtda saqlanadi.</p>
   </main>
 
-  <!-- ==================== DIALOG OYNA (JPG EXPORT) ==================== -->
+  <!-- ==================== DIALOG 1: SABABLI DAVOMAT OYNASI ==================== -->
+  <div class="dialog-backdrop" id="excuseDialog">
+    <div class="dialog-card dialog-card-sm">
+      <div class="dialog-header">
+        <h3 class="dialog-title" id="excuseStudentTitle">Sababli davomat</h3>
+        <button class="dialog-close" id="closeExcuseDialog">&times;</button>
+      </div>
+      <div class="dialog-body">
+        <p style="margin:0; font-size:15px; color:var(--muted);">Kelmaganlik sababini tanlang yoki o‘zingiz yozing:</p>
+        
+        <div class="reason-pills">
+          <button type="button" class="reason-pill" onclick="setExcuseInput('Betob / Kasallik')">Betob / Kasallik</button>
+          <button type="button" class="reason-pill" onclick="setExcuseInput('Oilaviy sabab')">Oilaviy sabab</button>
+          <button type="button" class="reason-pill" onclick="setExcuseInput('Shifoxonada')">Shifoxonada</button>
+          <button type="button" class="reason-pill" onclick="setExcuseInput('Musobaqa / Tadbir')">Musobaqa / Tadbir</button>
+        </div>
+
+        <div class="field">
+          <label for="excuseReasonInput">Sababi matni:</label>
+          <input id="excuseReasonInput" placeholder="Masalan: Shamollagan, shifokor ko‘rigida..." required>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+          <button type="button" class="secondary-button" id="cancelExcuseBtn">Bekor qilish</button>
+          <button type="button" class="primary-button" id="saveExcuseBtn">Saqlash (Sababli)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DIALOG 2: JPG EXPORT (LANDSCAPE) ==================== -->
   <div class="dialog-backdrop" id="exportDialog">
     <div class="dialog-card">
       <div class="dialog-header">
-        <h2 class="dialog-title">🖼️ Davomatni JPG rasm qilib yuklash</h2>
+        <h2 class="dialog-title">🖼️ Davomatni JPG (Landscape / Yotiq) qilib yuklash</h2>
         <button class="dialog-close" id="closeExportDialog">&times;</button>
       </div>
       <div class="dialog-body">
         
-        <!-- 1. KUNLIK DAVOMAT -->
+        <!-- 1. KUNLIK DAVOMAT (FANLAR NOMI BILAN) -->
         <div class="export-option-card">
           <div class="option-info">
             <div class="option-title">
               <span>📅 1 Kunlik Davomat</span>
-              <span class="option-badge">KUNLIK</span>
+              <span class="option-badge">LANDSCAPE • FANLAR NOMI</span>
             </div>
-            <p class="option-desc" id="exportDailyDesc">Tanlangan kun davomat varaqasini JPG rasm qilib yuklash</p>
+            <p class="option-desc" id="exportDailyDesc">Kunning barcha darslari, fanlar nomlari va davomat holati (JPG)</p>
           </div>
           <button class="download-btn" id="btnDownloadDaily" type="button">
             <span>📥</span><span>Yuklab olish</span>
@@ -633,9 +686,9 @@
           <div class="option-info">
             <div class="option-title">
               <span>📆 1 Haftalik Davomat</span>
-              <span class="option-badge">HAFTALIK</span>
+              <span class="option-badge">6 KUNLIK JURNAL</span>
             </div>
-            <p class="option-desc" id="exportWeeklyDesc">Haftadagi 6 kunlik to‘liq jadval va statistika (JPG)</p>
+            <p class="option-desc" id="exportWeeklyDesc">Haftadagi 6 kunning to‘liq jadvali va fanlar ro‘yxati (JPG)</p>
           </div>
           <button class="download-btn" id="btnDownloadWeekly" type="button">
             <span>📥</span><span>Yuklab olish</span>
@@ -647,9 +700,9 @@
           <div class="option-info">
             <div class="option-title">
               <span>🗓️ 1 Oylik Davomat</span>
-              <span class="option-badge">OYLIK JURNAL</span>
+              <span class="option-badge">OYLIK TO‘LIQ JURNAL</span>
             </div>
-            <p class="option-desc" id="exportMonthlyDesc">To‘liq oylik sinf davomati jurnali jadvali (JPG)</p>
+            <p class="option-desc" id="exportMonthlyDesc">1 dan 31 gacha kunlik to‘liq albom jurnali (JPG)</p>
           </div>
           <button class="download-btn" id="btnDownloadMonthly" type="button">
             <span>📥</span><span>Yuklab olish</span>
@@ -660,7 +713,7 @@
     </div>
   </div>
 
-  <!-- YASHIRIN RENDER KONTEYNERI -->
+  <!-- YASHIRIN LANDSCAPE RENDER KONTEYNERI -->
   <div id="hiddenPrintArea"></div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -699,6 +752,8 @@
           lessons: {} 
         } 
       };
+
+      let pendingExcuseData = null; // { studentId, lessonId, studentName }
 
       const $ = (id) => document.getElementById(id);
 
@@ -743,16 +798,28 @@
         return state.data.attendance[key] || {}; 
       }
 
-      function setAttendance(studentId, status, lessonId) {
-        const key = dateAttendanceKey(state.date, lessonId || null);
-        const current = (state.data.attendance[key] && state.data.attendance[key][studentId]) || '';
-        
-        const newStatus = (current === status) ? null : status;
+      // Statusni olish (obyekt yoki oddiy string formatini qo'llab-quvvatlaydi)
+      function getStudentStatusInfo(rec) {
+        if (!rec) return { status: '', reason: '' };
+        if (typeof rec === 'object') {
+          return { status: rec.status || '', reason: rec.reason || '' };
+        }
+        return { status: String(rec), reason: '' };
+      }
 
-        if (newStatus === null) {
+      function setAttendance(studentId, status, lessonId, reason = '') {
+        const key = dateAttendanceKey(state.date, lessonId || null);
+        const currentRec = (state.data.attendance[key] && state.data.attendance[key][studentId]) || null;
+        const currentInfo = getStudentStatusInfo(currentRec);
+        
+        // Agar o'sha holat ustiga qayta bossa (sabablidan tashqari), bekor qiladi
+        if (currentInfo.status === status && status !== 'excused') {
           db.ref(`attendance/${key}/${studentId}`).remove();
         } else {
-          db.ref(`attendance/${key}/${studentId}`).set(newStatus);
+          const val = (status === 'excused') 
+            ? { status: 'excused', reason: reason || 'Sababli' }
+            : status;
+          db.ref(`attendance/${key}/${studentId}`).set(val);
         }
         showToast("Saqlandi");
       }
@@ -777,12 +844,15 @@
       }
 
       function counts(attendance) {
-        const values = STUDENTS.map(s => attendance[s.id]);
-        return { 
-          present: values.filter(x => x === 'present').length, 
-          absent: values.filter(x => x === 'absent').length, 
-          pending: values.filter(x => !x).length 
-        };
+        let present = 0, absent = 0, excused = 0, pending = 0;
+        STUDENTS.forEach(s => {
+          const info = getStudentStatusInfo(attendance[s.id]);
+          if (info.status === 'present') present++;
+          else if (info.status === 'absent') absent++;
+          else if (info.status === 'excused') excused++;
+          else pending++;
+        });
+        return { present, absent, excused, pending };
       }
 
       function dailyRollup(date) {
@@ -791,8 +861,11 @@
         const all = [general, ...lessons.map(lesson => state.data.attendance[dateAttendanceKey(date, lesson.id)] || {})];
         const rolled = {};
         for (const student of STUDENTS) {
-          const marks = all.map(record => record[student.id]).filter(Boolean);
-          rolled[student.id] = marks.includes('present') ? 'present' : marks.includes('absent') ? 'absent' : '';
+          const statuses = all.map(record => getStudentStatusInfo(record[student.id]).status).filter(Boolean);
+          if (statuses.includes('present')) rolled[student.id] = 'present';
+          else if (statuses.includes('excused')) rolled[student.id] = 'excused';
+          else if (statuses.includes('absent')) rolled[student.id] = 'absent';
+          else rolled[student.id] = '';
         }
         const c = counts(rolled);
         const markedLessons = lessons.filter(lesson => {
@@ -829,14 +902,16 @@
             <span class="day-number">${date.getDate()}</span>
             <span class="day-month">${escapeHtml(month)}</span>
             <span class="day-status ${stateClass}">${status}</span>
-            <span class="day-counts"><span class="day-present">✓ ${c.present} bor</span><br><span class="day-absent">✕ ${c.absent} yo‘q</span></span>
+            <span class="day-counts">
+              <span class="day-present">✓ ${c.present} bor</span> · <span class="day-absent">✕ ${c.absent} yo‘q</span>${c.excused ? ` · <span class="day-excused">⏳ ${c.excused} sababli</span>` : ''}
+            </span>
             ${lessonsLine}
           </button>`);
         }
         $('dayCards').innerHTML = cards.join('');
       }
 
-      /* 1, 2, 3 TARTIB RAQAMI VA KATTA SHRIFT BILAN O'QUVCHI CHIQARISH */
+      /* 1, 2, 3 TARTIB RAQAMI VA BOR / YO'Q / SABABLI TUGMALARI */
       function studentListHtml(attendance, lessonId) {
         if (!STUDENTS.length) {
           return `<div class="empty" style="border:0; padding:36px 12px;">
@@ -846,11 +921,15 @@
         }
 
         return STUDENTS.map((student, idx) => {
-          const status = attendance[student.id] || '';
-          const stateText = status === 'present' ? '✓ Bor deb belgilandi' : status === 'absent' ? '✕ Yo‘q deb belgilandi' : 'Hali belgilanmagan';
+          const info = getStudentStatusInfo(attendance[student.id]);
+          let stateText = 'Hali belgilanmagan';
+          if (info.status === 'present') stateText = '✓ Bor deb belgilandi';
+          else if (info.status === 'absent') stateText = '✕ Yo‘q deb belgilandi';
+          else if (info.status === 'excused') stateText = `⏳ Sababli: ${escapeHtml(info.reason || 'Sababli')}`;
+
           return `<div class="student">
             <div class="student-main">
-              <!-- BOSH HARFLAR O'RNIGA TARTIB RAQAMI (1, 2, 3...) -->
+              <!-- TARTIB RAQAMI (1, 2, 3...) -->
               <div class="student-index" aria-hidden="true">${idx + 1}</div>
               <div>
                 <div class="student-name">${escapeHtml(student.name)}</div>
@@ -858,8 +937,13 @@
               </div>
             </div>
             <div class="actions" role="group" aria-label="${escapeHtml(student.name)} davomatini belgilang">
-              <button type="button" class="status-button present ${status === 'present' ? 'active' : ''}" aria-pressed="${status === 'present'}" data-student="${student.id}" data-status="present" ${lessonId ? `data-lesson="${escapeHtml(lessonId)}"` : ''}>✓ Bor</button>
-              <button type="button" class="status-button absent ${status === 'absent' ? 'active' : ''}" aria-pressed="${status === 'absent'}" data-student="${student.id}" data-status="absent" ${lessonId ? `data-lesson="${escapeHtml(lessonId)}"` : ''}>✕ Yo‘q</button>
+              <!-- BOR -->
+              <button type="button" class="status-button present ${info.status === 'present' ? 'active' : ''}" aria-pressed="${info.status === 'present'}" data-student="${student.id}" data-status="present" ${lessonId ? `data-lesson="${escapeHtml(lessonId)}"` : ''}>✓ Bor</button>
+              <!-- YO'Q -->
+              <button type="button" class="status-button absent ${info.status === 'absent' ? 'active' : ''}" aria-pressed="${info.status === 'absent'}" data-student="${student.id}" data-status="absent" ${lessonId ? `data-lesson="${escapeHtml(lessonId)}"` : ''}>✕ Yo‘q</button>
+              <!-- SABABLI -->
+              <button type="button" class="status-button excused ${info.status === 'excused' ? 'active' : ''}" aria-pressed="${info.status === 'excused'}" data-open-excuse="${student.id}" data-student-name="${escapeHtml(student.name)}" ${lessonId ? `data-lesson="${escapeHtml(lessonId)}"` : ''}>⏳ Sababli</button>
+              <!-- O'CHIRISH -->
               <button type="button" class="delete-student-btn" data-delete-student="${student.id}" data-student-name="${escapeHtml(student.name)}" title="O‘quvchini o‘chirish">✕</button>
             </div>
           </div>`;
@@ -868,7 +952,12 @@
 
       function summaryHtml(attendance) {
         const c = counts(attendance);
-        return `<span class="good">Bor: <b>${c.present}</b></span><span class="bad">Yo‘q: <b>${c.absent}</b></span><span>Belgilanmagan: <b>${c.pending}</b></span>`;
+        return `
+          <span class="good">Bor: <b>${c.present}</b></span>
+          <span class="bad">Yo‘q: <b>${c.absent}</b></span>
+          ${c.excused ? `<span class="warn">Sababli: <b>${c.excused}</b></span>` : ''}
+          <span>Belgilanmagan: <b>${c.pending}</b></span>
+        `;
       }
 
       function renderGeneralAttendance() {
@@ -882,7 +971,7 @@
         renderDayCards();
         const lessons = currentLessons().slice().sort((a,b) => a.start.localeCompare(b.start));
         if (!lessons.length) {
-          $('lessonList').innerHTML = `<div class="empty"><div class="empty-title">Bu kunga dars kiritilmagan</div><div class="empty-text">Dars rejasini boshlash uchun “＋ Dars qo‘shish” tugmasini bosing.</div><button class="primary-button" type="button" id="emptyAddLesson">＋ Dars qo‘shish</button></div>`;
+          $('lessonList').innerHTML = `<div class="empty"><div class="empty-title">Bu kunga dars kiritilmagan</div><div class="empty-text">Dars rejasini boshlash uchun “＋ Dars qo‘shish” tugmasini bosing (2-smena: 13:10 dan).</div><button class="primary-button" type="button" id="emptyAddLesson">＋ Dars qo‘shish</button></div>`;
           $('emptyAddLesson').addEventListener('click', openLessonForm);
           return;
         }
@@ -894,7 +983,7 @@
             <div>
               <div class="lesson-topline"><span class="lesson-number">${index+1}-dars</span><span class="lesson-time">${escapeHtml(lesson.start)} – ${escapeHtml(lesson.end)}</span></div>
               <div class="lesson-name">${escapeHtml(lesson.name)}</div>
-              <div class="lesson-progress"><strong style="color:var(--present)">Bor: ${c.present}</strong> · <strong style="color:var(--absent)">Yo‘q: ${c.absent}</strong> · ${allMarked ? 'Davomat tugallandi' : `Belgilandi: <strong>${STUDENTS.length-c.pending}/${STUDENTS.length}</strong>`}</div>
+              <div class="lesson-progress"><strong style="color:var(--present)">Bor: ${c.present}</strong> · <strong style="color:var(--absent)">Yo‘q: ${c.absent}</strong>${c.excused ? ` · <strong style="color:var(--excused)">Sababli: ${c.excused}</strong>` : ''} · ${allMarked ? 'Davomat tugallandi' : `Belgilandi: <strong>${STUDENTS.length-c.pending}/${STUDENTS.length}</strong>`}</div>
             </div>
             <div class="lesson-buttons"><button type="button" class="primary-button take-button" data-open-lesson="${escapeHtml(lesson.id)}">Davomatni belgilash →</button><button type="button" class="delete-lesson" data-delete-lesson="${escapeHtml(lesson.id)}">Darsni o‘chirish</button></div>
           </article>`;
@@ -960,7 +1049,7 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
-      // FORMALAR BOSHQARUVI
+      // FORMALAR BOSHQARUVI (13:10 dan)
       function openLessonForm() {
         $('lessonForm').classList.add('open');
         $('lessonName').focus();
@@ -968,8 +1057,8 @@
       function closeLessonForm() {
         $('lessonForm').classList.remove('open');
         $('lessonForm').reset();
-        $('lessonStart').value = '08:30';
-        $('lessonEnd').value = '09:15';
+        $('lessonStart').value = '13:10';
+        $('lessonEnd').value = '13:55';
       }
 
       function openStudentForm() {
@@ -999,15 +1088,46 @@
         document.querySelector('meta[name="theme-color"]').content = dark ? '#161816' : '#f7f7f5';
       }
 
-      // ==================== JPG EKSPORT FUNKSIYALARI ====================
+      // ==================== SABABLI MODALI BOSHQARUVI ====================
+      function openExcuseModal(studentId, studentName, lessonId) {
+        pendingExcuseData = { studentId, studentName, lessonId };
+        $('excuseStudentTitle').textContent = `⏳ Sababli davomat: ${studentName}`;
+        $('excuseReasonInput').value = 'Betob / Kasallik';
+        $('excuseDialog').classList.add('open');
+        $('excuseReasonInput').focus();
+      }
+
+      function closeExcuseModal() {
+        $('excuseDialog').classList.remove('open');
+        pendingExcuseData = null;
+      }
+
+      window.setExcuseInput = function(val) {
+        $('excuseReasonInput').value = val;
+      };
+
+      $('saveExcuseBtn').addEventListener('click', () => {
+        if (!pendingExcuseData) return;
+        const reason = $('excuseReasonInput').value.trim() || 'Sababli';
+        setAttendance(pendingExcuseData.studentId, 'excused', pendingExcuseData.lessonId, reason);
+        closeExcuseModal();
+      });
+
+      $('cancelExcuseBtn').addEventListener('click', closeExcuseModal);
+      $('closeExcuseDialog').addEventListener('click', closeExcuseModal);
+      $('excuseDialog').addEventListener('click', (e) => {
+        if (e.target === $('excuseDialog')) closeExcuseModal();
+      });
+
+      // ==================== JPG EXPORT (LANDSCAPE / FANLAR NOMI BILAN) ====================
       function openExportModal() {
         const dateObj = new Date(`${state.date}T12:00:00`);
         const formattedDate = new Intl.DateTimeFormat('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' }).format(dateObj);
         const formattedMonth = new Intl.DateTimeFormat('uz-UZ', { month: 'long', year: 'numeric' }).format(dateObj);
         
-        $('exportDailyDesc').textContent = `${formattedDate} kunining to‘liq davomati (JPG)`;
-        $('exportWeeklyDesc').textContent = `Ushbu haftaning (Du–Yak) davomat hisoboti (JPG)`;
-        $('exportMonthlyDesc').textContent = `${formattedMonth} oyi uchun to‘liq jurnal davomati (JPG)`;
+        $('exportDailyDesc').textContent = `${formattedDate} kungi darslar, fanlar nomi va davomat (Landscape JPG)`;
+        $('exportWeeklyDesc').textContent = `Haftadagi 6 kunlik to‘liq albom jurnali va fanlar (Landscape JPG)`;
+        $('exportMonthlyDesc').textContent = `${formattedMonth} oyi to‘liq davomat jurnali (Landscape JPG)`;
 
         $('exportDialog').classList.add('open');
       }
@@ -1016,15 +1136,14 @@
         $('exportDialog').classList.remove('open');
       }
 
-      // Rasm qilib yuklab olish umumiy generatori
+      // Rasm qilib yuklab olish umumiy generatori (LANDSCAPE: scale 2)
       async function generateAndDownloadJpg(htmlContent, filename) {
         const area = $('hiddenPrintArea');
         area.innerHTML = htmlContent;
 
-        showToast("JPG rasm tayyorlanmoqda... ⏳");
+        showToast("Landscape JPG tayyorlanmoqda... ⏳");
 
         try {
-          // html2canvas orqali yuqori sifatli rasmga aylantirish (scale: 2)
           const canvas = await html2canvas(area, {
             scale: 2,
             useCORS: true,
@@ -1032,13 +1151,12 @@
             logging: false
           });
 
-          // JPG formatda konvertatsiya qilish
           const link = document.createElement('a');
           link.download = filename;
           link.href = canvas.toDataURL('image/jpeg', 0.95);
           link.click();
 
-          showToast("Rasm yuklab olindi! ✅");
+          showToast("Landscape JPG rasm yuklab olindi! ✅");
           closeExportModal();
         } catch (err) {
           console.error("JPG export xatosi:", err);
@@ -1048,112 +1166,166 @@
         }
       }
 
-      // 1. KUNLIK DAVOMAT (JPG)
+      // 1. KUNLIK DAVOMAT (LANDSCAPE + FANLAR NOMI + SABABLI)
       function exportDailyJpg() {
         if (!STUDENTS.length) { showToast("O‘quvchilar ro‘yxati bo‘sh!"); return; }
 
         const dateObj = new Date(`${state.date}T12:00:00`);
         const formattedDate = new Intl.DateTimeFormat('uz-UZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(dateObj);
         
+        const lessons = currentLessons().slice().sort((a,b) => a.start.localeCompare(b.start));
         const attendance = getAttendance(state.date, null);
         const c = counts(attendance);
         const percent = STUDENTS.length ? Math.round((c.present / STUDENTS.length) * 100) : 0;
 
-        let rowsHtml = '';
-        STUDENTS.forEach((student, idx) => {
-          const st = attendance[student.id];
-          const isPresent = st === 'present';
-          const isAbsent = st === 'absent';
-          const badge = isPresent 
-            ? `<span style="display:inline-block; padding:6px 16px; border-radius:8px; background:#dcfce7; color:#15803d; font-weight:800; font-size:16px;">✓ BOR</span>`
-            : isAbsent 
-            ? `<span style="display:inline-block; padding:6px 16px; border-radius:8px; background:#fee2e2; color:#b91c1c; font-weight:800; font-size:16px;">✕ YO‘Q</span>`
-            : `<span style="color:#6b7280; font-weight:600; font-size:15px;">—</span>`;
-
-          rowsHtml += `
-            <tr style="border-bottom:1px solid #e5e7eb; background:${idx % 2 === 0 ? '#ffffff' : '#f9fafb'};">
-              <td style="padding:14px 16px; text-align:center; font-weight:800; color:#4b5563; font-size:18px;">${idx + 1}</td>
-              <td style="padding:14px 20px; font-weight:800; color:#111827; font-size:20px;">${escapeHtml(student.name)}</td>
-              <td style="padding:14px 20px; text-align:center;">${badge}</td>
-            </tr>
+        // Fanlar banneri
+        let lessonsBannerHtml = '';
+        if (lessons.length) {
+          lessonsBannerHtml = `
+            <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:14px; padding:16px 20px; margin-bottom:24px;">
+              <div style="font-size:16px; font-weight:800; color:#334155; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
+                📚 Bugungi Darslar Jadvali (2-smena):
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:12px;">
+                ${lessons.map((l, i) => `
+                  <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:8px 14px; font-size:15px; font-weight:750; color:#0f172a;">
+                    <span style="color:#64748b;">${i+1}.</span> ${escapeHtml(l.name)} <span style="font-size:13px; color:#64748b; font-weight:600;">(${l.start}–${l.end})</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
           `;
-        });
+        }
+
+        // O'quvchilar ro'yxatini 2 ta ustunga bo'lib chiqaramiz (Landscape da mukammal sig'ishi uchun)
+        const half = Math.ceil(STUDENTS.length / 2);
+        const col1 = STUDENTS.slice(0, half);
+        const col2 = STUDENTS.slice(half);
+
+        const renderTableColumn = (list, startIndex) => {
+          let rows = '';
+          list.forEach((student, i) => {
+            const idx = startIndex + i;
+            const info = getStudentStatusInfo(attendance[student.id]);
+            let badge = `<span style="color:#94a3b8; font-weight:600;">—</span>`;
+            if (info.status === 'present') {
+              badge = `<span style="display:inline-block; padding:4px 14px; border-radius:8px; background:#dcfce7; color:#15803d; font-weight:800; font-size:15px;">✓ BOR</span>`;
+            } else if (info.status === 'absent') {
+              badge = `<span style="display:inline-block; padding:4px 14px; border-radius:8px; background:#fee2e2; color:#b91c1c; font-weight:800; font-size:15px;">✕ YO‘Q</span>`;
+            } else if (info.status === 'excused') {
+              badge = `<span style="display:inline-block; padding:4px 12px; border-radius:8px; background:#fef9c3; color:#a16207; font-weight:800; font-size:14px;">⏳ ${escapeHtml(info.reason || 'Sababli')}</span>`;
+            }
+
+            rows += `
+              <tr style="border-bottom:1px solid #e2e8f0; background:${i % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+                <td style="padding:10px 14px; text-align:center; font-weight:800; color:#64748b; font-size:16px;">${idx + 1}</td>
+                <td style="padding:10px 16px; font-weight:800; color:#0f172a; font-size:18px;">${escapeHtml(student.name)}</td>
+                <td style="padding:10px 14px; text-align:center;">${badge}</td>
+              </tr>
+            `;
+          });
+          return rows;
+        };
 
         const template = `
-          <div style="background:#ffffff; color:#111827; font-family:Inter, system-ui, sans-serif; padding:10px;">
-            <!-- HEADER -->
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #111827; padding-bottom:20px; margin-bottom:25px;">
+          <div style="background:#ffffff; color:#0f172a; font-family:Inter, system-ui, sans-serif; padding:10px;">
+            <!-- YUQORI QISM -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #0f172a; padding-bottom:18px; margin-bottom:20px;">
               <div>
-                <div style="font-size:32px; font-weight:900; letter-spacing:-0.5px; color:#111827;">36-MAKTAB DAVOMAT HISOBOTI</div>
-                <div style="font-size:20px; color:#4b5563; margin-top:6px; font-weight:700;">Kunlik hisobot: ${formattedDate}</div>
+                <div style="font-size:34px; font-weight:900; letter-spacing:-0.5px; color:#0f172a;">36-MAKTAB KUNLIK DAVOMAT HISOBOTI</div>
+                <div style="font-size:20px; color:#475569; margin-top:4px; font-weight:700;">Sana: ${formattedDate} • 2-smena</div>
               </div>
-              <div style="text-align:right;">
-                <div style="font-size:28px; font-weight:900; color:#15803d;">${percent}% Qatnashish</div>
-                <div style="font-size:16px; color:#6b7280; margin-top:4px; font-weight:600;">Jami: ${STUDENTS.length} ta o‘quvchi</div>
-              </div>
-            </div>
-
-            <!-- STATISTIKA KARTALARI -->
-            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:28px;">
-              <div style="background:#f3f4f6; border:1px solid #e5e7eb; border-radius:14px; padding:16px; text-align:center;">
-                <div style="font-size:15px; font-weight:700; color:#4b5563;">Jami O‘quvchi</div>
-                <div style="font-size:32px; font-weight:900; color:#111827; margin-top:4px;">${STUDENTS.length}</div>
-              </div>
-              <div style="background:#dcfce7; border:1px solid #bbf7d0; border-radius:14px; padding:16px; text-align:center;">
-                <div style="font-size:15px; font-weight:700; color:#166534;">Bor (Kelganlar)</div>
-                <div style="font-size:32px; font-weight:900; color:#15803d; margin-top:4px;">${c.present}</div>
-              </div>
-              <div style="background:#fee2e2; border:1px solid #fecaca; border-radius:14px; padding:16px; text-align:center;">
-                <div style="font-size:15px; font-weight:700; color:#991b1b;">Yo‘q (Kelmaganlar)</div>
-                <div style="font-size:32px; font-weight:900; color:#b91c1c; margin-top:4px;">${c.absent}</div>
+              <div style="display:flex; gap:16px; align-items:center;">
+                <div style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:12px; padding:10px 18px; text-align:center;">
+                  <div style="font-size:13px; font-weight:700; color:#64748b;">QATNASHISH</div>
+                  <div style="font-size:26px; font-weight:900; color:#15803d;">${percent}%</div>
+                </div>
+                <div style="background:#dcfce7; border:1px solid #86efac; border-radius:12px; padding:10px 18px; text-align:center;">
+                  <div style="font-size:13px; font-weight:700; color:#166534;">BOR</div>
+                  <div style="font-size:26px; font-weight:900; color:#15803d;">${c.present}</div>
+                </div>
+                <div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:12px; padding:10px 18px; text-align:center;">
+                  <div style="font-size:13px; font-weight:700; color:#991b1b;">YO‘Q</div>
+                  <div style="font-size:26px; font-weight:900; color:#b91c1c;">${c.absent}</div>
+                </div>
+                <div style="background:#fef9c3; border:1px solid #fde047; border-radius:12px; padding:10px 18px; text-align:center;">
+                  <div style="font-size:13px; font-weight:700; color:#854d0e;">SABABLI</div>
+                  <div style="font-size:26px; font-weight:900; color:#a16207;">${c.excused}</div>
+                </div>
               </div>
             </div>
 
-            <!-- JADVAL -->
-            <table style="width:100%; border-collapse:collapse; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden;">
-              <thead>
-                <tr style="background:#111827; color:#ffffff;">
-                  <th style="padding:14px 16px; width:70px; text-align:center; font-size:16px; font-weight:800;">№</th>
-                  <th style="padding:14px 20px; text-align:left; font-size:18px; font-weight:800;">O‘quvchining F.I.SH</th>
-                  <th style="padding:14px 20px; width:180px; text-align:center; font-size:18px; font-weight:800;">Davomat Holati</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${rowsHtml}
-              </tbody>
-            </table>
+            <!-- FANLAR NOMI BANNERI -->
+            ${lessonsBannerHtml}
+
+            <!-- 2 USTUNLI JADVAL (LANDSCAPE) -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+              <!-- 1-ustun -->
+              <table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; border-radius:12px; overflow:hidden;">
+                <thead>
+                  <tr style="background:#0f172a; color:#ffffff;">
+                    <th style="padding:12px 10px; width:60px; text-align:center; font-size:15px; font-weight:800;">№</th>
+                    <th style="padding:12px 16px; text-align:left; font-size:16px; font-weight:800;">O‘quvchining F.I.SH</th>
+                    <th style="padding:12px 14px; width:160px; text-align:center; font-size:16px; font-weight:800;">Holati</th>
+                  </tr>
+                </thead>
+                <tbody>${renderTableColumn(col1, 0)}</tbody>
+              </table>
+
+              <!-- 2-ustun -->
+              <table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; border-radius:12px; overflow:hidden;">
+                <thead>
+                  <tr style="background:#0f172a; color:#ffffff;">
+                    <th style="padding:12px 10px; width:60px; text-align:center; font-size:15px; font-weight:800;">№</th>
+                    <th style="padding:12px 16px; text-align:left; font-size:16px; font-weight:800;">O‘quvchining F.I.SH</th>
+                    <th style="padding:12px 14px; width:160px; text-align:center; font-size:16px; font-weight:800;">Holati</th>
+                  </tr>
+                </thead>
+                <tbody>${renderTableColumn(col2, half)}</tbody>
+              </table>
+            </div>
 
             <!-- FOOTER -->
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:35px; padding-top:20px; border-top:1px solid #e5e7eb; font-size:16px; color:#4b5563;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:30px; padding-top:18px; border-top:1px solid #cbd5e1; font-size:16px; color:#475569;">
               <div>Sinf rahbari imzosi: __________________________</div>
               <div>Hujjat yaratilgan vaqt: ${new Date().toLocaleDateString('uz-UZ')} ${new Date().toLocaleTimeString('uz-UZ').slice(0,5)}</div>
             </div>
           </div>
         `;
 
-        generateAndDownloadJpg(template, `36-maktab_Davomat_${state.date}.jpg`);
+        generateAndDownloadJpg(template, `36-maktab_Landscape_Davomat_${state.date}.jpg`);
       }
 
-      // 2. HAFTALIK DAVOMAT (JPG)
+      // 2. HAFTALIK DAVOMAT (LANDSCAPE + FANLAR NOMI + SABABLI)
       function exportWeeklyJpg() {
         if (!STUDENTS.length) { showToast("O‘quvchilar ro‘yxati bo‘sh!"); return; }
 
         const start = weekStart(state.date);
-        const dayNames = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'];
+        const dayNames = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
         const weekDates = [];
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < 6; i++) { // Du-Sha (6 kun)
           const d = new Date(start);
           d.setDate(start.getDate() + i);
           weekDates.push(localDate(d));
         }
 
-        const dateRangeStr = `${weekDates[0]} dan ${weekDates[6]} gacha`;
+        const dateRangeStr = `${weekDates[0]} dan ${weekDates[5]} gacha`;
 
-        // Haftaning kunlari bo'yicha sarlavha
+        // Har bir kunga fanlar nomini yig'amiz
         let theadDays = '';
         weekDates.forEach((wDate, idx) => {
           const dayNum = parseInt(wDate.split('-')[2]);
-          theadDays += `<th style="padding:12px 6px; text-align:center; border-left:1px solid #374151; font-size:14px; font-weight:800;">${dayNames[idx].slice(0,4)}<br><span style="font-size:13px; font-weight:600; opacity:0.8;">${dayNum}-okt</span></th>`;
+          const dayLessons = lessonsForDate(wDate);
+          const lessonNames = dayLessons.slice(0, 3).map(l => l.name).join(', ') + (dayLessons.length > 3 ? '...' : '');
+
+          theadDays += `
+            <th style="padding:10px 6px; text-align:center; border-left:1px solid #334155; font-size:14px; font-weight:800;">
+              <div>${dayNames[idx]} (${dayNum})</div>
+              <div style="font-size:11px; font-weight:600; color:#94a3b8; margin-top:2px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                ${lessonNames || 'Darslar'}
+              </div>
+            </th>
+          `;
         });
 
         let rowsHtml = '';
@@ -1161,71 +1333,75 @@
           let daysHtml = '';
           let presentCount = 0;
           let absentCount = 0;
+          let excusedCount = 0;
 
           weekDates.forEach(wDate => {
             const att = state.data.attendance[dateAttendanceKey(wDate, null)] || {};
-            const st = att[student.id];
-            if (st === 'present') {
+            const info = getStudentStatusInfo(att[student.id]);
+            if (info.status === 'present') {
               presentCount++;
-              daysHtml += `<td style="padding:10px 4px; text-align:center; font-weight:900; color:#15803d; background:#dcfce7; border-left:1px solid #e5e7eb; font-size:16px;">✓</td>`;
-            } else if (st === 'absent') {
+              daysHtml += `<td style="padding:8px 4px; text-align:center; font-weight:900; color:#15803d; background:#dcfce7; border-left:1px solid #e2e8f0; font-size:16px;">✓</td>`;
+            } else if (info.status === 'absent') {
               absentCount++;
-              daysHtml += `<td style="padding:10px 4px; text-align:center; font-weight:900; color:#b91c1c; background:#fee2e2; border-left:1px solid #e5e7eb; font-size:16px;">✕</td>`;
+              daysHtml += `<td style="padding:8px 4px; text-align:center; font-weight:900; color:#b91c1c; background:#fee2e2; border-left:1px solid #e2e8f0; font-size:16px;">✕</td>`;
+            } else if (info.status === 'excused') {
+              excusedCount++;
+              daysHtml += `<td style="padding:8px 4px; text-align:center; font-weight:900; color:#a16207; background:#fef9c3; border-left:1px solid #e2e8f0; font-size:14px;" title="${escapeHtml(info.reason)}">⏳</td>`;
             } else {
-              daysHtml += `<td style="padding:10px 4px; text-align:center; color:#9ca3af; border-left:1px solid #e5e7eb; font-size:14px;">—</td>`;
+              daysHtml += `<td style="padding:8px 4px; text-align:center; color:#94a3b8; border-left:1px solid #e2e8f0; font-size:14px;">—</td>`;
             }
           });
 
           rowsHtml += `
-            <tr style="border-bottom:1px solid #e5e7eb; background:${idx % 2 === 0 ? '#ffffff' : '#f9fafb'};">
-              <td style="padding:10px 12px; text-align:center; font-weight:800; color:#4b5563; font-size:16px;">${idx + 1}</td>
-              <td style="padding:10px 16px; font-weight:800; color:#111827; font-size:17px; white-space:nowrap;">${escapeHtml(student.name)}</td>
+            <tr style="border-bottom:1px solid #e2e8f0; background:${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+              <td style="padding:9px 10px; text-align:center; font-weight:800; color:#64748b; font-size:15px;">${idx + 1}</td>
+              <td style="padding:9px 14px; font-weight:800; color:#0f172a; font-size:17px; white-space:nowrap;">${escapeHtml(student.name)}</td>
               ${daysHtml}
-              <td style="padding:10px 10px; text-align:center; font-weight:900; color:#15803d; border-left:2px solid #e5e7eb; font-size:17px;">${presentCount}</td>
-              <td style="padding:10px 10px; text-align:center; font-weight:900; color:#b91c1c; border-left:1px solid #e5e7eb; font-size:17px;">${absentCount}</td>
+              <td style="padding:9px 8px; text-align:center; font-weight:900; color:#15803d; border-left:2px solid #cbd5e1; font-size:16px; background:#f0fdf4;">${presentCount}</td>
+              <td style="padding:9px 8px; text-align:center; font-weight:900; color:#b91c1c; border-left:1px solid #e2e8f0; font-size:16px; background:#fef2f2;">${absentCount}</td>
+              <td style="padding:9px 8px; text-align:center; font-weight:900; color:#a16207; border-left:1px solid #e2e8f0; font-size:16px; background:#fefce8;">${excusedCount}</td>
             </tr>
           `;
         });
 
         const template = `
-          <div style="background:#ffffff; color:#111827; font-family:Inter, system-ui, sans-serif; padding:10px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #111827; padding-bottom:18px; margin-bottom:20px;">
+          <div style="background:#ffffff; color:#0f172a; font-family:Inter, system-ui, sans-serif; padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #0f172a; padding-bottom:18px; margin-bottom:20px;">
               <div>
-                <div style="font-size:30px; font-weight:900; color:#111827;">36-MAKTAB HAFTALIK DAVOMAT JURNALI</div>
-                <div style="font-size:18px; color:#4b5563; margin-top:4px; font-weight:700;">Hafta oralig‘i: ${dateRangeStr}</div>
+                <div style="font-size:32px; font-weight:900; color:#0f172a;">36-MAKTAB HAFTALIK DAVOMAT JURNALI (LANDSCAPE)</div>
+                <div style="font-size:18px; color:#475569; margin-top:4px; font-weight:700;">Hafta oralig‘i: ${dateRangeStr} • 2-smena (13:10)</div>
               </div>
               <div style="text-align:right;">
-                <div style="font-size:22px; font-weight:900; color:#111827;">Jami: ${STUDENTS.length} ta o‘quvchi</div>
-                <div style="font-size:15px; color:#6b7280; font-weight:600;">Haftalik to‘liq jadval</div>
+                <div style="font-size:22px; font-weight:900; color:#0f172a;">Jami: ${STUDENTS.length} nafar o‘quvchi</div>
+                <div style="font-size:15px; color:#64748b; font-weight:600;">Haftaning 6 kuni (Du–Sha)</div>
               </div>
             </div>
 
-            <table style="width:100%; border-collapse:collapse; border:1px solid #e5e7eb; font-size:15px;">
+            <table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; font-size:15px;">
               <thead>
-                <tr style="background:#111827; color:#ffffff;">
-                  <th style="padding:12px 10px; width:50px; text-align:center; font-size:15px; font-weight:800;">№</th>
-                  <th style="padding:12px 16px; text-align:left; font-size:16px; font-weight:800;">O‘quvchining F.I.SH</th>
+                <tr style="background:#0f172a; color:#ffffff;">
+                  <th style="padding:12px 8px; width:50px; text-align:center; font-size:15px; font-weight:800;">№</th>
+                  <th style="padding:12px 14px; text-align:left; font-size:16px; font-weight:800;">O‘quvchining F.I.SH</th>
                   ${theadDays}
-                  <th style="padding:12px 10px; width:70px; text-align:center; border-left:2px solid #374151; font-size:14px; font-weight:800; background:#065f46;">Jami Bor</th>
-                  <th style="padding:12px 10px; width:70px; text-align:center; border-left:1px solid #374151; font-size:14px; font-weight:800; background:#991b1b;">Jami Yo‘q</th>
+                  <th style="padding:12px 8px; width:75px; text-align:center; border-left:2px solid #334155; font-size:14px; font-weight:800; background:#065f46;">Jami Bor</th>
+                  <th style="padding:12px 8px; width:75px; text-align:center; border-left:1px solid #334155; font-size:14px; font-weight:800; background:#991b1b;">Jami Yo‘q</th>
+                  <th style="padding:12px 8px; width:75px; text-align:center; border-left:1px solid #334155; font-size:14px; font-weight:800; background:#854d0e;">Sababli</th>
                 </tr>
               </thead>
-              <tbody>
-                ${rowsHtml}
-              </tbody>
+              <tbody>${rowsHtml}</tbody>
             </table>
 
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:30px; padding-top:16px; border-top:1px solid #e5e7eb; font-size:15px; color:#4b5563;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:30px; padding-top:16px; border-top:1px solid #cbd5e1; font-size:15px; color:#475569;">
               <div>Sinf rahbari imzosi: __________________________</div>
               <div>Hujjat yaratilgan vaqt: ${new Date().toLocaleDateString('uz-UZ')}</div>
             </div>
           </div>
         `;
 
-        generateAndDownloadJpg(template, `36-maktab_Haftalik_Davomat_${weekDates[0]}.jpg`);
+        generateAndDownloadJpg(template, `36-maktab_Haftalik_Landscape_${weekDates[0]}.jpg`);
       }
 
-      // 3. OYLIK DAVOMAT (JPG)
+      // 3. OYLIK DAVOMAT (LANDSCAPE)
       function exportMonthlyJpg() {
         if (!STUDENTS.length) { showToast("O‘quvchilar ro‘yxati bo‘sh!"); return; }
 
@@ -1237,74 +1413,78 @@
 
         let theadDays = '';
         for (let d = 1; d <= daysInMonth; d++) {
-          theadDays += `<th style="padding:8px 3px; width:26px; text-align:center; border-left:1px solid #374151; font-size:12px; font-weight:800;">${d}</th>`;
+          theadDays += `<th style="padding:8px 2px; width:30px; text-align:center; border-left:1px solid #334155; font-size:12px; font-weight:800;">${d}</th>`;
         }
 
         let rowsHtml = '';
         STUDENTS.forEach((student, idx) => {
           let daysHtml = '';
           let totalPresent = 0;
+          let totalExcused = 0;
 
           for (let d = 1; d <= daysInMonth; d++) {
             const curDate = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const att = state.data.attendance[dateAttendanceKey(curDate, null)] || {};
-            const st = att[student.id];
+            const info = getStudentStatusInfo(att[student.id]);
 
-            if (st === 'present') {
+            if (info.status === 'present') {
               totalPresent++;
-              daysHtml += `<td style="padding:6px 2px; text-align:center; font-weight:900; color:#15803d; background:#dcfce7; border-left:1px solid #e5e7eb; font-size:13px;">+</td>`;
-            } else if (st === 'absent') {
-              daysHtml += `<td style="padding:6px 2px; text-align:center; font-weight:900; color:#b91c1c; background:#fee2e2; border-left:1px solid #e5e7eb; font-size:13px;">-</td>`;
+              daysHtml += `<td style="padding:6px 2px; text-align:center; font-weight:900; color:#15803d; background:#dcfce7; border-left:1px solid #e2e8f0; font-size:13px;">+</td>`;
+            } else if (info.status === 'absent') {
+              daysHtml += `<td style="padding:6px 2px; text-align:center; font-weight:900; color:#b91c1c; background:#fee2e2; border-left:1px solid #e2e8f0; font-size:13px;">-</td>`;
+            } else if (info.status === 'excused') {
+              totalExcused++;
+              daysHtml += `<td style="padding:6px 2px; text-align:center; font-weight:900; color:#a16207; background:#fef9c3; border-left:1px solid #e2e8f0; font-size:12px;">s</td>`;
             } else {
-              daysHtml += `<td style="padding:6px 2px; text-align:center; color:#d1d5db; border-left:1px solid #e5e7eb; font-size:11px;">·</td>`;
+              daysHtml += `<td style="padding:6px 2px; text-align:center; color:#cbd5e1; border-left:1px solid #e2e8f0; font-size:10px;">·</td>`;
             }
           }
 
           rowsHtml += `
-            <tr style="border-bottom:1px solid #e5e7eb; background:${idx % 2 === 0 ? '#ffffff' : '#f9fafb'};">
-              <td style="padding:8px 6px; text-align:center; font-weight:800; color:#4b5563; font-size:14px;">${idx + 1}</td>
-              <td style="padding:8px 12px; font-weight:800; color:#111827; font-size:15px; white-space:nowrap;">${escapeHtml(student.name)}</td>
+            <tr style="border-bottom:1px solid #e2e8f0; background:${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+              <td style="padding:8px 4px; text-align:center; font-weight:800; color:#64748b; font-size:14px;">${idx + 1}</td>
+              <td style="padding:8px 12px; font-weight:800; color:#0f172a; font-size:15px; white-space:nowrap;">${escapeHtml(student.name)}</td>
               ${daysHtml}
-              <td style="padding:8px 6px; text-align:center; font-weight:900; color:#15803d; border-left:2px solid #e5e7eb; font-size:15px; background:#f0fdf4;">${totalPresent}</td>
+              <td style="padding:8px 6px; text-align:center; font-weight:900; color:#15803d; border-left:2px solid #cbd5e1; font-size:15px; background:#f0fdf4;">${totalPresent}</td>
+              <td style="padding:8px 6px; text-align:center; font-weight:900; color:#a16207; border-left:1px solid #e2e8f0; font-size:14px; background:#fefce8;">${totalExcused}</td>
             </tr>
           `;
         });
 
         const template = `
-          <div style="background:#ffffff; color:#111827; font-family:Inter, system-ui, sans-serif; padding:10px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #111827; padding-bottom:16px; margin-bottom:18px;">
+          <div style="background:#ffffff; color:#0f172a; font-family:Inter, system-ui, sans-serif; padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #0f172a; padding-bottom:16px; margin-bottom:18px;">
               <div>
-                <div style="font-size:28px; font-weight:900; color:#111827;">36-MAKTAB OYLIK DAVOMAT JURNALI</div>
-                <div style="font-size:18px; color:#4b5563; margin-top:4px; font-weight:700;">Davr: ${monthTitle}</div>
+                <div style="font-size:30px; font-weight:900; color:#0f172a;">36-MAKTAB OYLIK DAVOMAT JURNALI (LANDSCAPE)</div>
+                <div style="font-size:18px; color:#475569; margin-top:4px; font-weight:700;">Davr: ${monthTitle} • 2-smena (13:10)</div>
               </div>
               <div style="text-align:right;">
-                <div style="font-size:22px; font-weight:900; color:#111827;">Jami: ${STUDENTS.length} nafar o‘quvchi</div>
-                <div style="font-size:14px; color:#6b7280; font-weight:600;">Kunlar: 1 dan ${daysInMonth} gacha</div>
+                <div style="font-size:22px; font-weight:900; color:#0f172a;">Jami: ${STUDENTS.length} nafar o‘quvchi</div>
+                <div style="font-size:14px; color:#64748b; font-weight:600;">Kunlar: 1 dan ${daysInMonth} gacha</div>
               </div>
             </div>
 
-            <table style="width:100%; border-collapse:collapse; border:1px solid #e5e7eb; font-size:13px;">
+            <table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; font-size:13px;">
               <thead>
-                <tr style="background:#111827; color:#ffffff;">
-                  <th style="padding:10px 6px; width:40px; text-align:center; font-size:14px; font-weight:800;">№</th>
+                <tr style="background:#0f172a; color:#ffffff;">
+                  <th style="padding:10px 4px; width:40px; text-align:center; font-size:14px; font-weight:800;">№</th>
                   <th style="padding:10px 12px; text-align:left; font-size:15px; font-weight:800;">O‘quvchining F.I.SH</th>
                   ${theadDays}
-                  <th style="padding:10px 6px; width:60px; text-align:center; border-left:2px solid #374151; font-size:13px; font-weight:800; background:#065f46;">Jami</th>
+                  <th style="padding:10px 6px; width:65px; text-align:center; border-left:2px solid #334155; font-size:13px; font-weight:800; background:#065f46;">Jami Bor</th>
+                  <th style="padding:10px 6px; width:65px; text-align:center; border-left:1px solid #334155; font-size:13px; font-weight:800; background:#854d0e;">Sababli</th>
                 </tr>
               </thead>
-              <tbody>
-                ${rowsHtml}
-              </tbody>
+              <tbody>${rowsHtml}</tbody>
             </table>
 
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:25px; padding-top:16px; border-top:1px solid #e5e7eb; font-size:15px; color:#4b5563;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:25px; padding-top:16px; border-top:1px solid #cbd5e1; font-size:15px; color:#475569;">
               <div>Sinf rahbari imzosi: __________________________</div>
               <div>Hujjat yaratilgan vaqt: ${new Date().toLocaleDateString('uz-UZ')}</div>
             </div>
           </div>
         `;
 
-        generateAndDownloadJpg(template, `36-maktab_Oylik_Davomat_${year}_${month+1}.jpg`);
+        generateAndDownloadJpg(template, `36-maktab_Oylik_Landscape_${year}_${month+1}.jpg`);
       }
 
       // HODISALAR (EVENTS)
@@ -1332,6 +1512,14 @@
         const dayCard = event.target.closest('[data-day]');
         if (dayCard) { selectDate(dayCard.dataset.day); return; }
 
+        // SABABLI BOSILGANDA
+        const excuseBtn = event.target.closest('[data-open-excuse]');
+        if (excuseBtn) {
+          openExcuseModal(excuseBtn.dataset.openExcuse, excuseBtn.dataset.studentName, excuseBtn.dataset.lesson || null);
+          return;
+        }
+
+        // BOR / YO'Q BOSILGANDA
         const statusButton = event.target.closest('[data-student][data-status]');
         if (statusButton) {
           setAttendance(statusButton.dataset.student, statusButton.dataset.status, statusButton.dataset.lesson || null);
@@ -1385,7 +1573,7 @@
         });
       });
 
-      // Dars qo'shish
+      // Dars qo'shish (13:10 dan)
       $('showAddLesson').addEventListener('click', () => {
         if ($('lessonForm').classList.contains('open')) closeLessonForm(); else openLessonForm();
       });
