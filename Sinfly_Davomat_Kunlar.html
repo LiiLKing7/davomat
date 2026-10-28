@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f7f5">
-  <title>Sinfly — Oson davomat</title>
+  <title>36-maktab — Davomat tizimi</title>
   
-  <!-- Firebase SDK (Loginsiz, tezkor ishlash uchun) -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
@@ -15,197 +15,341 @@
       color-scheme: light;
       --bg: #f7f7f5;
       --surface: #ffffff;
-      --surface-soft: #f2f3f0;
-      --text: #20231f;
-      --muted: #686e66;
-      --line: #e2e5df;
-      --primary: #252a25;
+      --surface-soft: #f0f2ee;
+      --text: #171a17;
+      --muted: #535a51;
+      --line: #d8dcd5;
+      --primary: #1c211c;
       --primary-text: #ffffff;
-      --present: #176b43;
-      --present-bg: #e6f5ec;
-      --present-line: #b8e3c8;
-      --absent: #ae342d;
-      --absent-bg: #fff0ee;
-      --absent-line: #f1c8c3;
-      --focus: #477ee7;
-      --shadow: 0 2px 10px rgba(20, 30, 20, .035);
+      --present: #11603a;
+      --present-bg: #dff5e8;
+      --present-line: #a0ddb7;
+      --absent: #b52921;
+      --absent-bg: #feebe8;
+      --absent-line: #f4b4ad;
+      --focus: #3b76e1;
+      --shadow: 0 4px 16px rgba(20, 30, 20, .06);
     }
     html[data-theme="dark"] {
       color-scheme: dark;
-      --bg: #161816;
-      --surface: #202320;
-      --surface-soft: #292d29;
-      --text: #f3f5f1;
-      --muted: #b0b6ae;
-      --line: #383e38;
+      --bg: #141614;
+      --surface: #1e211e;
+      --surface-soft: #272b27;
+      --text: #f5f7f3;
+      --muted: #b5bbb2;
+      --line: #373e37;
       --primary: #f0f3ee;
-      --primary-text: #20231f;
+      --primary-text: #1a1d1a;
       --present: #9ee2b8;
-      --present-bg: #20392a;
-      --present-line: #315e40;
+      --present-bg: #1d3b29;
+      --present-line: #2e6640;
       --absent: #ffaaa3;
-      --absent-bg: #402625;
-      --absent-line: #693632;
+      --absent-bg: #442220;
+      --absent-line: #73332e;
       --focus: #8ab0ff;
-      --shadow: 0 2px 10px rgba(0, 0, 0, .12);
+      --shadow: 0 4px 14px rgba(0, 0, 0, .2);
     }
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font: 16px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+    body { 
+      margin: 0; 
+      min-height: 100vh; 
+      background: var(--bg); 
+      color: var(--text); 
+      font: 18px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; 
+      -webkit-font-smoothing: antialiased; 
+    }
     button, input, select { font: inherit; }
     button { cursor: pointer; }
     button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-    .shell { width: min(100% - 32px, 900px); margin: 0 auto; padding: 20px 0 36px; }
-    .top { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 22px; }
-    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
-    .brand-mark { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto; border-radius: 13px; background: var(--primary); color: var(--primary-text); font-size: 21px; font-weight: 800; }
-    .brand-name { font-size: 20px; font-weight: 760; letter-spacing: -.7px; line-height: 1.2; }
-    .brand-caption { font-size: 13px; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 6px; }
-    .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; }
-    .theme-button { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text); padding: 10px 13px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
+
+    /* KENGAYTIRILGAN SHELL (1500px) */
+    .shell { 
+      width: min(100% - 40px, 1500px); 
+      margin: 0 auto; 
+      padding: 24px 0 48px; 
+    }
+
+    .top { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    
+    /* 36-MAKTAB LOGO MARK */
+    .brand-mark { 
+      display: grid; 
+      place-items: center; 
+      width: 52px; 
+      height: 52px; 
+      flex: 0 0 auto; 
+      border-radius: 14px; 
+      background: var(--primary); 
+      color: var(--primary-text); 
+      font-size: 24px; 
+      font-weight: 850; 
+      letter-spacing: -1px;
+    }
+    .brand-name { font-size: 26px; font-weight: 800; letter-spacing: -.8px; line-height: 1.2; }
+    .brand-caption { font-size: 15px; color: var(--muted); margin-top: 4px; display: flex; align-items: center; gap: 8px; font-weight: 550; }
+    .sync-dot { width: 9px; height: 9px; border-radius: 50%; background: #22c55e; display: inline-block; }
+
+    .theme-button { 
+      border: 1px solid var(--line); 
+      border-radius: 12px; 
+      background: var(--surface); 
+      color: var(--text); 
+      padding: 12px 18px; 
+      min-height: 48px; 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 10px; 
+      white-space: nowrap; 
+      font-size: 16px;
+      font-weight: 650;
+    }
     .theme-button:hover, .secondary-button:hover { background: var(--surface-soft); }
-    .calendar-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 15px; margin-bottom: 15px; box-shadow: var(--shadow); }
-    .calendar-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 13px; }
-    .date-caption { color: var(--muted); font-size: 13px; margin-bottom: 3px; }
-    .date-title { font-weight: 750; font-size: 16px; }
-    .week-controls { display: flex; align-items: center; gap: 6px; }
-    .week-button { min-height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); padding: 7px 10px; font-weight: 700; }
+
+    /* KALENDAR PANELI */
+    .calendar-panel { 
+      background: var(--surface); 
+      border: 1px solid var(--line); 
+      border-radius: 18px; 
+      padding: 18px 20px; 
+      margin-bottom: 20px; 
+      box-shadow: var(--shadow); 
+    }
+    .calendar-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 16px; }
+    .date-caption { color: var(--muted); font-size: 15px; margin-bottom: 4px; font-weight: 600; }
+    .date-title { font-weight: 800; font-size: 22px; }
+    .week-controls { display: flex; align-items: center; gap: 8px; }
+    .week-button { 
+      min-height: 44px; 
+      border: 1px solid var(--line); 
+      border-radius: 11px; 
+      background: var(--surface); 
+      color: var(--text); 
+      padding: 8px 16px; 
+      font-weight: 750; 
+      font-size: 15px;
+    }
     .week-button:hover { background: var(--surface-soft); }
-    .day-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
-    .day-card { min-width: 0; text-align: left; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text); padding: 10px 9px; min-height: 132px; display: flex; flex-direction: column; gap: 4px; transition: border-color .12s ease, background .12s ease; }
+
+    /* KUN KARTALARI */
+    .day-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; }
+    .day-card { 
+      min-width: 0; 
+      text-align: left; 
+      border: 1px solid var(--line); 
+      border-radius: 14px; 
+      background: var(--surface); 
+      color: var(--text); 
+      padding: 14px 12px; 
+      min-height: 145px; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 4px; 
+      transition: border-color .12s ease, background .12s ease; 
+    }
     .day-card:hover { background: var(--surface-soft); }
-    .day-card.active { border: 2px solid var(--primary); padding: 9px 8px; background: var(--surface-soft); }
+    .day-card.active { border: 2.5px solid var(--primary); padding: 13px 11px; background: var(--surface-soft); }
     .day-card.today:not(.active) { border-color: var(--focus); }
-    .day-name { text-transform: capitalize; color: var(--muted); font-size: 12px; font-weight: 750; }
-    .day-number { font-size: 22px; line-height: 1.15; font-weight: 800; letter-spacing: -.5px; }
-    .day-month { color: var(--muted); font-size: 11px; margin-top: -2px; }
-    .day-status { font-size: 11px; font-weight: 750; margin-top: 4px; line-height: 1.25; }
+    .day-name { text-transform: capitalize; color: var(--muted); font-size: 15px; font-weight: 800; }
+    .day-number { font-size: 28px; line-height: 1.15; font-weight: 850; letter-spacing: -.6px; }
+    .day-month { color: var(--muted); font-size: 13px; font-weight: 600; }
+    .day-status { font-size: 13px; font-weight: 750; margin-top: 6px; line-height: 1.25; }
     .day-status.done { color: var(--present); }
     .day-status.partial { color: #a15a00; }
     html[data-theme="dark"] .day-status.partial { color: #f1c27a; }
     .day-status.pending { color: var(--muted); }
-    .day-counts { font-size: 11px; color: var(--muted); line-height: 1.35; margin-top: auto; }
-    .day-counts .day-present { color: var(--present); font-weight: 750; }
-    .day-counts .day-absent { color: var(--absent); font-weight: 750; }
-    .day-lessons { color: var(--muted); font-size: 10px; line-height: 1.2; padding-top: 2px; }
-    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 5px; background: var(--surface-soft); border-radius: 14px; margin-bottom: 18px; }
-    .tab { min-height: 48px; border: 1px solid transparent; border-radius: 10px; padding: 11px 12px; background: transparent; color: var(--muted); font-weight: 700; text-align: center; }
+    .day-counts { font-size: 14px; color: var(--muted); line-height: 1.4; margin-top: auto; padding-top: 6px; }
+    .day-counts .day-present { color: var(--present); font-weight: 800; }
+    .day-counts .day-absent { color: var(--absent); font-weight: 800; }
+    .day-lessons { color: var(--muted); font-size: 13px; font-weight: 600; line-height: 1.2; padding-top: 3px; }
+
+    /* TABLAR */
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 6px; background: var(--surface-soft); border-radius: 16px; margin-bottom: 22px; }
+    .tab { 
+      min-height: 52px; 
+      border: 1px solid transparent; 
+      border-radius: 12px; 
+      padding: 12px 16px; 
+      background: transparent; 
+      color: var(--muted); 
+      font-weight: 750; 
+      font-size: 17px;
+      text-align: center; 
+    }
     .tab.active { background: var(--surface); color: var(--text); border-color: var(--line); box-shadow: var(--shadow); }
-    .page-heading { margin: 0 0 6px; font-size: clamp(23px, 4vw, 29px); line-height: 1.2; letter-spacing: -.8px; }
-    .page-help { margin: 0 0 19px; color: var(--muted); font-size: 15px; }
-    .surface { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
-    .list-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 17px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-    .list-heading-left { display: flex; flex-direction: column; gap: 2px; }
-    .list-heading strong { font-size: 16px; }
-    .list-heading span { color: var(--muted); font-size: 13px; }
-    .student-list { padding: 0 18px; }
-    .student { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--line); }
+
+    .page-heading { margin: 0 0 6px; font-size: clamp(26px, 3.5vw, 34px); line-height: 1.2; letter-spacing: -.8px; font-weight: 850; }
+    .page-help { margin: 0 0 20px; color: var(--muted); font-size: 17px; }
+    .surface { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden; }
+
+    /* RO'YXAT HEADERI */
+    .list-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 24px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+    .list-heading-left { display: flex; flex-direction: column; gap: 4px; }
+    .list-heading strong { font-size: 20px; font-weight: 800; }
+    .list-heading span { color: var(--muted); font-size: 15px; font-weight: 600; }
+
+    /* O'QUVCHI QATORI (KATTA VA ANIQ) */
+    .student-list { padding: 0 24px; }
+    .student { 
+      display: grid; 
+      grid-template-columns: minmax(0,1fr) auto; 
+      gap: 20px; 
+      align-items: center; 
+      padding: 18px 0; 
+      border-bottom: 1px solid var(--line); 
+    }
     .student:last-child { border-bottom: 0; }
-    .student-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
-    .avatar { width: 43px; height: 43px; flex: 0 0 auto; border-radius: 12px; display: grid; place-items: center; background: var(--surface-soft); color: var(--text); font-size: 13px; font-weight: 750; }
-    .student-name { font-size: 16px; font-weight: 680; overflow-wrap: anywhere; }
-    .student-state { color: var(--muted); font-size: 13px; margin-top: 3px; }
-    .actions { display: flex; align-items: center; gap: 8px; }
-    .status-button { border: 1px solid var(--line); border-radius: 10px; min-width: 88px; min-height: 43px; padding: 9px 12px; background: var(--surface); color: var(--muted); font-weight: 750; }
+    .student-main { display: flex; align-items: center; gap: 16px; min-width: 0; }
+    
+    /* RAQAMLAR DOIRASI / KVADRATI (1, 2, 3...) */
+    .student-index { 
+      width: 48px; 
+      height: 48px; 
+      flex: 0 0 auto; 
+      border-radius: 14px; 
+      display: grid; 
+      place-items: center; 
+      background: var(--surface-soft); 
+      color: var(--text); 
+      font-size: 19px; 
+      font-weight: 850; 
+      border: 1px solid var(--line);
+    }
+    .student-name { 
+      font-size: 21px; 
+      font-weight: 750; 
+      letter-spacing: -.4px;
+      overflow-wrap: anywhere; 
+    }
+    .student-state { color: var(--muted); font-size: 15px; margin-top: 4px; font-weight: 600; }
+
+    /* TUGMALAR (KATTA VA QULAY) */
+    .actions { display: flex; align-items: center; gap: 10px; }
+    .status-button { 
+      border: 1px solid var(--line); 
+      border-radius: 12px; 
+      min-width: 108px; 
+      min-height: 50px; 
+      padding: 10px 18px; 
+      background: var(--surface); 
+      color: var(--muted); 
+      font-weight: 800; 
+      font-size: 17px;
+    }
     .status-button:hover { background: var(--surface-soft); }
     .status-button.present.active { color: var(--present); background: var(--present-bg); border-color: var(--present-line); }
     .status-button.absent.active { color: var(--absent); background: var(--absent-bg); border-color: var(--absent-line); }
-    .delete-student-btn { border: 0; background: transparent; color: var(--muted); padding: 9px 10px; min-height: 43px; border-radius: 10px; font-size: 13px; }
+    
+    .delete-student-btn { 
+      border: 0; 
+      background: transparent; 
+      color: var(--muted); 
+      padding: 10px 12px; 
+      min-height: 50px; 
+      border-radius: 11px; 
+      font-size: 16px; 
+      font-weight: 750;
+    }
     .delete-student-btn:hover { color: var(--absent); background: var(--absent-bg); }
-    .summary { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 15px 18px; border-top: 1px solid var(--line); background: var(--surface-soft); color: var(--muted); font-size: 14px; }
-    .summary b { color: var(--text); }
+
+    .summary { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding: 18px 24px; border-top: 1px solid var(--line); background: var(--surface-soft); color: var(--muted); font-size: 16px; font-weight: 600; }
+    .summary b { color: var(--text); font-size: 18px; font-weight: 850; }
     .summary .good { color: var(--present); }
     .summary .bad { color: var(--absent); }
+
     .page { display: none; }
     .page.active { display: block; }
-    .schedule-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 17px; }
-    .schedule-toolbar .page-heading { margin-bottom: 4px; }
-    .primary-button, .secondary-button { min-height: 45px; border-radius: 11px; padding: 10px 15px; font-weight: 750; border: 1px solid var(--line); }
+    .schedule-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+    
+    .primary-button, .secondary-button { 
+      min-height: 50px; 
+      border-radius: 12px; 
+      padding: 12px 20px; 
+      font-weight: 800; 
+      font-size: 16px;
+      border: 1px solid var(--line); 
+    }
     .primary-button { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
     .primary-button:hover { opacity: .88; }
     .secondary-button { background: var(--surface); color: var(--text); }
-    .lesson-list { display: grid; gap: 11px; }
-    .lesson-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 14px; box-shadow: var(--shadow); }
-    .lesson-topline { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 5px; }
-    .lesson-number { font-size: 12px; font-weight: 750; padding: 4px 8px; border-radius: 7px; background: var(--surface-soft); color: var(--muted); }
-    .lesson-time { color: var(--muted); font-size: 13px; font-weight: 650; }
-    .lesson-name { font-weight: 750; font-size: 18px; overflow-wrap: anywhere; }
-    .lesson-detail { color: var(--muted); font-size: 13px; margin-top: 4px; }
-    .lesson-progress { color: var(--muted); font-size: 13px; margin-top: 7px; }
-    .lesson-progress strong { color: var(--text); }
-    .lesson-buttons { display: flex; flex-direction: column; align-items: stretch; gap: 7px; }
-    .take-button { min-width: 180px; }
-    .delete-lesson { border: 0; background: transparent; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; padding: 5px; font-size: 12px; }
-    .delete-lesson:hover { color: var(--absent); }
-    .empty { text-align: center; padding: 36px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 15px; }
-    .empty-title { font-size: 17px; font-weight: 750; }
-    .empty-text { color: var(--muted); font-size: 14px; margin: 6px 0 16px; }
-    .lesson-attendance-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; padding: 17px 18px; border-bottom: 1px solid var(--line); }
-    .back-button { border: 0; padding: 7px 0; color: var(--muted); background: transparent; font-weight: 700; }
-    .back-button:hover { color: var(--text); }
-    .current-lesson-title { margin: 4px 0 0; font-size: 22px; letter-spacing: -.5px; }
-    .current-lesson-meta { color: var(--muted); margin-top: 4px; font-size: 14px; }
-    .form-wrap { display: none; margin: 0 0 17px; padding: 17px; background: var(--surface); border: 1px solid var(--line); border-radius: 15px; box-shadow: var(--shadow); }
-    .form-wrap.open { display: block; }
-    .form-title { font-size: 17px; font-weight: 750; margin-bottom: 13px; }
-    .form-grid { display: grid; grid-template-columns: minmax(0,1fr) 150px 150px; gap: 12px; }
-    .form-grid-student { display: grid; grid-template-columns: minmax(0,1fr) 200px; gap: 12px; }
-    .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-    .field label { font-size: 13px; font-weight: 700; }
-    .field input { width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--text); padding: 10px 11px; }
-    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
-    .footer-note { text-align: center; color: var(--muted); font-size: 12px; margin: 18px 0 0; }
-    .toast { position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 12px); opacity: 0; pointer-events: none; padding: 11px 16px; border-radius: 11px; background: var(--primary); color: var(--primary-text); box-shadow: var(--shadow); font-size: 14px; transition: .18s ease; z-index: 10; max-width: calc(100vw - 32px); text-align: center; }
-    .toast.show { opacity: 1; transform: translate(-50%, 0); }
-    @media (max-width: 620px) {
-      .shell { width: min(100% - 22px, 900px); padding-top: 12px; }
-      .top { margin-bottom: 15px; }
-      .brand-mark { width: 38px; height: 38px; border-radius: 11px; }
-      .brand-name { font-size: 18px; }
-      .brand-caption { font-size: 12px; }
-      .theme-button { min-height: 41px; padding: 8px 10px; }
-      .calendar-panel { padding: 11px; border-radius: 13px; }
-      .calendar-top { align-items: flex-start; }
-      .week-controls { width: 100%; }
-      .week-button { flex: 1; }
-      .day-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
-      .day-card { min-height: 116px; padding: 9px; }
-      .day-card.active { padding: 8px; }
-      .day-number { font-size: 21px; }
-      .tabs { gap: 5px; margin-bottom: 16px; }
-      .tab { padding: 10px 7px; min-height: 46px; font-size: 14px; }
-      .page-help { font-size: 14px; margin-bottom: 14px; }
-      .list-heading { align-items: flex-start; flex-direction: column; gap: 8px; padding: 14px; }
-      .student-list { padding: 0 13px; }
-      .student { grid-template-columns: minmax(0,1fr); gap: 10px; padding: 13px 0; }
-      .student-main { gap: 10px; }
-      .avatar { width: 39px; height: 39px; border-radius: 10px; }
-      .student-name { font-size: 15px; }
-      .actions { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; width: 100%; }
-      .status-button { min-width: 0; width: 100%; min-height: 44px; }
-      .summary { gap: 8px 14px; padding: 13px; }
-      .schedule-toolbar { align-items: stretch; }
-      .schedule-toolbar .primary-button { width: 100%; }
-      .lesson-card { grid-template-columns: minmax(0,1fr); gap: 12px; padding: 14px; }
-      .lesson-name { font-size: 17px; }
-      .lesson-buttons { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; }
-      .take-button { min-width: 0; width: 100%; }
-      .delete-lesson { padding: 10px; }
-      .form-grid { grid-template-columns: 1fr 1fr; }
-      .form-grid-student { grid-template-columns: 1fr; }
-      .field:first-child { grid-column: 1 / -1; }
-      .lesson-attendance-head { padding: 14px; }
-      .current-lesson-title { font-size: 20px; }
+
+    /* DARSLAR KARTASI */
+    .lesson-list { display: grid; gap: 14px; }
+    .lesson-card { 
+      background: var(--surface); 
+      border: 1px solid var(--line); 
+      border-radius: 16px; 
+      padding: 20px 22px; 
+      display: grid; 
+      grid-template-columns: minmax(0,1fr) auto; 
+      align-items: center; 
+      gap: 16px; 
+      box-shadow: var(--shadow); 
     }
-    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+    .lesson-topline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+    .lesson-number { font-size: 14px; font-weight: 800; padding: 4px 10px; border-radius: 8px; background: var(--surface-soft); color: var(--muted); }
+    .lesson-time { color: var(--muted); font-size: 15px; font-weight: 700; }
+    .lesson-name { font-weight: 800; font-size: 22px; overflow-wrap: anywhere; }
+    .lesson-progress { color: var(--muted); font-size: 15px; margin-top: 8px; font-weight: 600; }
+    .lesson-progress strong { color: var(--text); font-weight: 800; }
+    .lesson-buttons { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+    .take-button { min-width: 210px; font-size: 16px; }
+    .delete-lesson { border: 0; background: transparent; color: var(--muted); text-decoration: underline; text-underline-offset: 4px; padding: 6px; font-size: 14px; font-weight: 600; }
+    .delete-lesson:hover { color: var(--absent); }
+
+    .empty { text-align: center; padding: 48px 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+    .empty-title { font-size: 20px; font-weight: 800; }
+    .empty-text { color: var(--muted); font-size: 16px; margin: 8px 0 20px; }
+
+    .lesson-attendance-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--line); }
+    .back-button { border: 0; padding: 8px 0; color: var(--muted); background: transparent; font-weight: 750; font-size: 16px; }
+    .back-button:hover { color: var(--text); }
+    .current-lesson-title { margin: 6px 0 0; font-size: 26px; letter-spacing: -.6px; font-weight: 850; }
+    .current-lesson-meta { color: var(--muted); margin-top: 6px; font-size: 16px; }
+
+    /* FORMALAR */
+    .form-wrap { display: none; margin: 0 0 20px; padding: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+    .form-wrap.open { display: block; }
+    .form-title { font-size: 20px; font-weight: 800; margin-bottom: 16px; }
+    .form-grid { display: grid; grid-template-columns: minmax(0,1fr) 180px 180px; gap: 14px; }
+    .form-grid-student { display: grid; grid-template-columns: minmax(0,1fr) 240px; gap: 14px; }
+    .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .field label { font-size: 15px; font-weight: 750; }
+    .field input { width: 100%; min-height: 48px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); padding: 12px 14px; font-size: 16px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+
+    .footer-note { text-align: center; color: var(--muted); font-size: 14px; margin: 24px 0 0; }
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 12px); opacity: 0; pointer-events: none; padding: 14px 22px; border-radius: 12px; background: var(--primary); color: var(--primary-text); box-shadow: var(--shadow); font-size: 16px; font-weight: 700; transition: .18s ease; z-index: 10; max-width: calc(100vw - 32px); text-align: center; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 900px) {
+      .day-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 650px) {
+      .shell { width: min(100% - 20px, 1500px); padding-top: 14px; }
+      .brand-mark { width: 44px; height: 44px; font-size: 20px; }
+      .brand-name { font-size: 22px; }
+      .day-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .student { grid-template-columns: minmax(0,1fr); gap: 12px; }
+      .student-name { font-size: 18px; }
+      .actions { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; width: 100%; }
+      .status-button { min-width: 0; width: 100%; min-height: 48px; }
+      .lesson-card { grid-template-columns: minmax(0,1fr); }
+      .lesson-buttons { display: grid; grid-template-columns: 1fr auto; }
+      .take-button { min-width: 0; width: 100%; }
+      .form-grid, .form-grid-student { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
   <main class="shell">
     <header class="top">
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true">S</div>
+        <div class="brand-mark" aria-hidden="true">36</div>
         <div>
-          <div class="brand-name">Sinfly</div>
+          <div class="brand-name">36-maktab</div>
           <div class="brand-caption"><span class="sync-dot"></span> Firebase ulandi (davomat-9cb5b)</div>
         </div>
       </div>
@@ -234,7 +378,7 @@
 
     <!-- 1-SAHIFA: UMUMIY KUNLIK DAVOMAT -->
     <section class="page active" id="attendancePage">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:16px;">
         <div>
           <h1 class="page-heading">O‘quvchilar davomatini belgilang</h1>
           <p class="page-help" style="margin-bottom:0">Har bir o‘quvchi uchun “Bor” yoki “Yo‘q” tugmasini bosing.</p>
@@ -268,7 +412,7 @@
             <span id="attendanceHeaderCount">0 nafar o‘quvchi</span>
           </div>
           <div>
-            <button class="secondary-button" id="markAllPresentBtn" type="button" style="min-height:36px; padding:6px 12px; font-size:13px;">✓ Barchasi “Bor”</button>
+            <button class="secondary-button" id="markAllPresentBtn" type="button" style="min-height:44px; padding:8px 16px; font-size:15px; font-weight:800;">✓ Barchasi “Bor”</button>
           </div>
         </div>
         <div class="student-list" id="generalStudentList"></div>
@@ -306,7 +450,7 @@
 
       <!-- DARS BO'YICHA DAVOMAT KO'RINIShI -->
       <div id="lessonAttendanceView" hidden>
-        <div style="margin-bottom:14px"><button class="back-button" id="backToLessons" type="button">← Darslar ro‘yxatiga qaytish</button></div>
+        <div style="margin-bottom:16px"><button class="back-button" id="backToLessons" type="button">← Darslar ro‘yxatiga qaytish</button></div>
         <div class="surface">
           <div class="lesson-attendance-head">
             <div>
@@ -315,7 +459,7 @@
               <div class="current-lesson-meta">Davomatni har bir o‘quvchi uchun belgilang.</div>
             </div>
             <div>
-              <button class="secondary-button" id="markAllLessonPresentBtn" type="button" style="min-height:36px; padding:6px 12px; font-size:13px;">✓ Barchasi “Bor”</button>
+              <button class="secondary-button" id="markAllLessonPresentBtn" type="button" style="min-height:44px; padding:8px 16px; font-size:15px; font-weight:800;">✓ Barchasi “Bor”</button>
             </div>
           </div>
           <div class="student-list" id="lessonStudentList"></div>
@@ -347,7 +491,7 @@
       }
       const db = firebase.database();
 
-      // 2. STATE (HOLAT) - FAKE MA'LUMOTLAR OLIB TASHLANDI!
+      // 2. STATE (HOLAT)
       let STUDENTS = []; // Firebase-dan yuklanadi
       const THEME_KEY = 'sinfly-theme-v2';
       const today = new Date();
@@ -410,7 +554,6 @@
         const key = dateAttendanceKey(state.date, lessonId || null);
         const current = (state.data.attendance[key] && state.data.attendance[key][studentId]) || '';
         
-        // Agar o'sha holat ustiga qayta bossa, bekor qiladi
         const newStatus = (current === status) ? null : status;
 
         if (newStatus === null) {
@@ -438,10 +581,6 @@
 
       function lessonsForDate(date) { 
         return Array.isArray(state.data.lessons[date]) ? state.data.lessons[date] : []; 
-      }
-
-      function initials(name) { 
-        return (name || '').split(/\s+/).slice(0,2).map(p => p[0]).join('').toUpperCase(); 
       }
 
       function counts(attendance) {
@@ -504,20 +643,22 @@
         $('dayCards').innerHTML = cards.join('');
       }
 
+      /* 1, 2, 3 TARTIB RAQAMI VA KATTA SHRIFT BILAN O'QUVCHI CHIQARISH */
       function studentListHtml(attendance, lessonId) {
         if (!STUDENTS.length) {
-          return `<div class="empty" style="border:0; padding:28px 10px;">
+          return `<div class="empty" style="border:0; padding:36px 12px;">
             <div class="empty-title">Hozircha o‘quvchilar yo‘q</div>
-            <div class="empty-text">Yuqoridagi “O‘quvchi qo‘shish” tugmasini bosing.</div>
+            <div class="empty-text">Yuqoridagi “＋ O‘quvchi qo‘shish” tugmasini bosing.</div>
           </div>`;
         }
 
-        return STUDENTS.map((student) => {
+        return STUDENTS.map((student, idx) => {
           const status = attendance[student.id] || '';
-          const stateText = status === 'present' ? 'Bor deb belgilandi' : status === 'absent' ? 'Yo‘q deb belgilandi' : 'Hali belgilanmagan';
+          const stateText = status === 'present' ? '✓ Bor deb belgilandi' : status === 'absent' ? '✕ Yo‘q deb belgilandi' : 'Hali belgilanmagan';
           return `<div class="student">
             <div class="student-main">
-              <div class="avatar" aria-hidden="true">${escapeHtml(initials(student.name))}</div>
+              <!-- BOSH HARFLAR O'RNIGA TARTIB RAQAMI (1, 2, 3...) -->
+              <div class="student-index" aria-hidden="true">${idx + 1}</div>
               <div>
                 <div class="student-name">${escapeHtml(student.name)}</div>
                 <div class="student-state">${stateText}</div>
@@ -526,7 +667,7 @@
             <div class="actions" role="group" aria-label="${escapeHtml(student.name)} davomatini belgilang">
               <button type="button" class="status-button present ${status === 'present' ? 'active' : ''}" aria-pressed="${status === 'present'}" data-student="${student.id}" data-status="present" ${lessonId ? `data-lesson="${escapeHtml(lessonId)}"` : ''}>✓ Bor</button>
               <button type="button" class="status-button absent ${status === 'absent' ? 'active' : ''}" aria-pressed="${status === 'absent'}" data-student="${student.id}" data-status="absent" ${lessonId ? `data-lesson="${escapeHtml(lessonId)}"` : ''}>✕ Yo‘q</button>
-              <button type="button" class="delete-student-btn" data-delete-student="${student.id}" data-student-name="${escapeHtml(student.name)}" title="O‘quvchini ro‘yxatdan o‘chirish">✕</button>
+              <button type="button" class="delete-student-btn" data-delete-student="${student.id}" data-student-name="${escapeHtml(student.name)}" title="O‘quvchini o‘chirish">✕</button>
             </div>
           </div>`;
         }).join('');
@@ -548,7 +689,7 @@
         renderDayCards();
         const lessons = currentLessons().slice().sort((a,b) => a.start.localeCompare(b.start));
         if (!lessons.length) {
-          $('lessonList').innerHTML = `<div class="empty"><div class="empty-title">Bu kunga dars kiritilmagan</div><div class="empty-text">Dars rejasini boshlash uchun “Dars qo‘shish” tugmasini bosing.</div><button class="primary-button" type="button" id="emptyAddLesson">＋ Dars qo‘shish</button></div>`;
+          $('lessonList').innerHTML = `<div class="empty"><div class="empty-title">Bu kunga dars kiritilmagan</div><div class="empty-text">Dars rejasini boshlash uchun “＋ Dars qo‘shish” tugmasini bosing.</div><button class="primary-button" type="button" id="emptyAddLesson">＋ Dars qo‘shish</button></div>`;
           $('emptyAddLesson').addEventListener('click', openLessonForm);
           return;
         }
