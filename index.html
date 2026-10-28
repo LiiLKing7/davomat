@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f5">
+  <title>Sinfly — Oson davomat</title>
+  
+  <!-- Firebase SDK (Loginsiz, tezkor ishlash uchun) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f7f5;
+      --surface: #ffffff;
+      --surface-soft: #f2f3f0;
+      --text: #20231f;
+      --muted: #686e66;
+      --line: #e2e5df;
+      --primary: #252a25;
+      --primary-text: #ffffff;
+      --present: #176b43;
+      --present-bg: #e6f5ec;
+      --present-line: #b8e3c8;
+      --absent: #ae342d;
+      --absent-bg: #fff0ee;
+      --absent-line: #f1c8c3;
+      --focus: #477ee7;
+      --shadow: 0 2px 10px rgba(20, 30, 20, .035);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #161816;
+      --surface: #202320;
+      --surface-soft: #292d29;
+      --text: #f3f5f1;
+      --muted: #b0b6ae;
+      --line: #383e38;
+      --primary: #f0f3ee;
+      --primary-text: #20231f;
+      --present: #9ee2b8;
+      --present-bg: #20392a;
+      --present-line: #315e40;
+      --absent: #ffaaa3;
+      --absent-bg: #402625;
+      --absent-line: #693632;
+      --focus: #8ab0ff;
+      --shadow: 0 2px 10px rgba(0, 0, 0, .12);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font: 16px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+    .shell { width: min(100% - 32px, 900px); margin: 0 auto; padding: 20px 0 36px; }
+    .top { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 22px; }
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .brand-mark { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto; border-radius: 13px; background: var(--primary); color: var(--primary-text); font-size: 21px; font-weight: 800; }
+    .brand-name { font-size: 20px; font-weight: 760; letter-spacing: -.7px; line-height: 1.2; }
+    .brand-caption { font-size: 13px; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 6px; }
+    .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; }
+    .theme-button { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text); padding: 10px 13px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
+    .theme-button:hover, .secondary-button:hover { background: var(--surface-soft); }
+    .calendar-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 15px; margin-bottom: 15px; box-shadow: var(--shadow); }
+    .calendar-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 13px; }
+    .date-caption { color: var(--muted); font-size: 13px; margin-bottom: 3px; }
+    .date-title { font-weight: 750; font-size: 16px; }
+    .week-controls { display: flex; align-items: center; gap: 6px; }
+    .week-button { min-height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); padding: 7px 10px; font-weight: 700; }
+    .week-button:hover { background: var(--surface-soft); }
+    .day-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+    .day-card { min-width: 0; text-align: left; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text); padding: 10px 9px; min-height: 132px; display: flex; flex-direction: column; gap: 4px; transition: border-color .12s ease, background .12s ease; }
+    .day-card:hover { background: var(--surface-soft); }
+    .day-card.active { border: 2px solid var(--primary); padding: 9px 8px; background: var(--surface-soft); }
+    .day-card.today:not(.active) { border-color: var(--focus); }
+    .day-name { text-transform: capitalize; color: var(--muted); font-size: 12px; font-weight: 750; }
+    .day-number { font-size: 22px; line-height: 1.15; font-weight: 800; letter-spacing: -.5px; }
+    .day-month { color: var(--muted); font-size: 11px; margin-top: -2px; }
+    .day-status { font-size: 11px; font-weight: 750; margin-top: 4px; line-height: 1.25; }
+    .day-status.done { color: var(--present); }
+    .day-status.partial { color: #a15a00; }
+    html[data-theme="dark"] .day-status.partial { color: #f1c27a; }
+    .day-status.pending { color: var(--muted); }
+    .day-counts { font-size: 11px; color: var(--muted); line-height: 1.35; margin-top: auto; }
+    .day-counts .day-present { color: var(--present); font-weight: 750; }
+    .day-counts .day-absent { color: var(--absent); font-weight: 750; }
+    .day-lessons { color: var(--muted); font-size: 10px; line-height: 1.2; padding-top: 2px; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 5px; background: var(--surface-soft); border-radius: 14px; margin-bottom: 18px; }
+    .tab { min-height: 48px; border: 1px solid transparent; border-radius: 10px; padding: 11px 12px; background: transparent; color: var(--muted); font-weight: 700; text-align: center; }
+    .tab.active { background: var(--surface); color: var(--text); border-color: var(--line); box-shadow: var(--shadow); }
+    .page-heading { margin: 0 0 6px; font-size: clamp(23px, 4vw, 29px); line-height: 1.2; letter-spacing: -.8px; }
+    .page-help { margin: 0 0 19px; color: var(--muted); font-size: 15px; }
+    .surface { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+    .list-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 17px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+    .list-heading-left { display: flex; flex-direction: column; gap: 2px; }
+    .list-heading strong { font-size: 16px; }
+    .list-heading span { color: var(--muted); font-size: 13px; }
+    .student-list { padding: 0 18px; }
+    .student { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--line); }
+    .student:last-child { border-bottom: 0; }
+    .student-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .avatar { width: 43px; height: 43px; flex: 0 0 auto; border-radius: 12px; display: grid; place-items: center; background: var(--surface-soft); color: var(--text); font-size: 13px; font-weight: 750; }
+    .student-name { font-size: 16px; font-weight: 680; overflow-wrap: anywhere; }
+    .student-state { color: var(--muted); font-size: 13px; margin-top: 3px; }
+    .actions { display: flex; align-items: center; gap: 8px; }
+    .status-button { border: 1px solid var(--line); border-radius: 10px; min-width: 88px; min-height: 43px; padding: 9px 12px; background: var(--surface); color: var(--muted); font-weight: 750; }
+    .status-button:hover { background: var(--surface-soft); }
+    .status-button.present.active { color: var(--present); background: var(--present-bg); border-color: var(--present-line); }
+    .status-button.absent.active { color: var(--absent); background: var(--absent-bg); border-color: var(--absent-line); }
+    .delete-student-btn { border: 0; background: transparent; color: var(--muted); padding: 9px 10px; min-height: 43px; border-radius: 10px; font-size: 13px; }
+    .delete-student-btn:hover { color: var(--absent); background: var(--absent-bg); }
+    .summary { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 15px 18px; border-top: 1px solid var(--line); background: var(--surface-soft); color: var(--muted); font-size: 14px; }
+    .summary b { color: var(--text); }
+    .summary .good { color: var(--present); }
+    .summary .bad { color: var(--absent); }
+    .page { display: none; }
+    .page.active { display: block; }
+    .schedule-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 17px; }
+    .schedule-toolbar .page-heading { margin-bottom: 4px; }
+    .primary-button, .secondary-button { min-height: 45px; border-radius: 11px; padding: 10px 15px; font-weight: 750; border: 1px solid var(--line); }
+    .primary-button { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
+    .primary-button:hover { opacity: .88; }
+    .secondary-button { background: var(--surface); color: var(--text); }
+    .lesson-list { display: grid; gap: 11px; }
+    .lesson-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 14px; box-shadow: var(--shadow); }
+    .lesson-topline { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 5px; }
+    .lesson-number { font-size: 12px; font-weight: 750; padding: 4px 8px; border-radius: 7px; background: var(--surface-soft); color: var(--muted); }
+    .lesson-time { color: var(--muted); font-size: 13px; font-weight: 650; }
+    .lesson-name { font-weight: 750; font-size: 18px; overflow-wrap: anywhere; }
+    .lesson-detail { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .lesson-progress { color: var(--muted); font-size: 13px; margin-top: 7px; }
+    .lesson-progress strong { color: var(--text); }
+    .lesson-buttons { display: flex; flex-direction: column; align-items: stretch; gap: 7px; }
+    .take-button { min-width: 180px; }
+    .delete-lesson { border: 0; background: transparent; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; padding: 5px; font-size: 12px; }
+    .delete-lesson:hover { color: var(--absent); }
+    .empty { text-align: center; padding: 36px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 15px; }
+    .empty-title { font-size: 17px; font-weight: 750; }
+    .empty-text { color: var(--muted); font-size: 14px; margin: 6px 0 16px; }
+    .lesson-attendance-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; padding: 17px 18px; border-bottom: 1px solid var(--line); }
+    .back-button { border: 0; padding: 7px 0; color: var(--muted); background: transparent; font-weight: 700; }
+    .back-button:hover { color: var(--text); }
+    .current-lesson-title { margin: 4px 0 0; font-size: 22px; letter-spacing: -.5px; }
+    .current-lesson-meta { color: var(--muted); margin-top: 4px; font-size: 14px; }
+    .form-wrap { display: none; margin: 0 0 17px; padding: 17px; background: var(--surface); border: 1px solid var(--line); border-radius: 15px; box-shadow: var(--shadow); }
+    .form-wrap.open { display: block; }
+    .form-title { font-size: 17px; font-weight: 750; margin-bottom: 13px; }
+    .form-grid { display: grid; grid-template-columns: minmax(0,1fr) 150px 150px; gap: 12px; }
+    .form-grid-student { display: grid; grid-template-columns: minmax(0,1fr) 200px; gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .field label { font-size: 13px; font-weight: 700; }
+    .field input { width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--text); padding: 10px 11px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+    .footer-note { text-align: center; color: var(--muted); font-size: 12px; margin: 18px 0 0; }
+    .toast { position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 12px); opacity: 0; pointer-events: none; padding: 11px 16px; border-radius: 11px; background: var(--primary); color: var(--primary-text); box-shadow: var(--shadow); font-size: 14px; transition: .18s ease; z-index: 10; max-width: calc(100vw - 32px); text-align: center; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 22px, 900px); padding-top: 12px; }
+      .top { margin-bottom: 15px; }
+      .brand-mark { width: 38px; height: 38px; border-radius: 11px; }
+      .brand-name { font-size: 18px; }
+      .brand-caption { font-size: 12px; }
+      .theme-button { min-height: 41px; padding: 8px 10px; }
+      .calendar-panel { padding: 11px; border-radius: 13px; }
+      .calendar-top { align-items: flex-start; }
+      .week-controls { width: 100%; }
+      .week-button { flex: 1; }
+      .day-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+      .day-card { min-height: 116px; padding: 9px; }
+      .day-card.active { padding: 8px; }
+      .day-number { font-size: 21px; }
+      .tabs { gap: 5px; margin-bottom: 16px; }
+      .tab { padding: 10px 7px; min-height: 46px; font-size: 14px; }
+      .page-help { font-size: 14px; margin-bottom: 14px; }
+      .list-heading { align-items: flex-start; flex-direction: column; gap: 8px; padding: 14px; }
+      .student-list { padding: 0 13px; }
+      .student { grid-template-columns: minmax(0,1fr); gap: 10px; padding: 13px 0; }
+      .student-main { gap: 10px; }
+      .avatar { width: 39px; height: 39px; border-radius: 10px; }
+      .student-name { font-size: 15px; }
+      .actions { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; width: 100%; }
+      .status-button { min-width: 0; width: 100%; min-height: 44px; }
+      .summary { gap: 8px 14px; padding: 13px; }
+      .schedule-toolbar { align-items: stretch; }
+      .schedule-toolbar .primary-button { width: 100%; }
+      .lesson-card { grid-template-columns: minmax(0,1fr); gap: 12px; padding: 14px; }
+      .lesson-name { font-size: 17px; }
+      .lesson-buttons { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; }
+      .take-button { min-width: 0; width: 100%; }
+      .delete-lesson { padding: 10px; }
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      .form-grid-student { grid-template-columns: 1fr; }
+      .field:first-child { grid-column: 1 / -1; }
+      .lesson-attendance-head { padding: 14px; }
+      .current-lesson-title { font-size: 20px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">S</div>
+        <div>
+          <div class="brand-name">Sinfly</div>
+          <div class="brand-caption"><span class="sync-dot"></span> Firebase ulandi (davomat-9cb5b)</div>
+        </div>
+      </div>
+      <button class="theme-button" id="themeToggle" type="button" aria-label="Rang rejimini almashtirish"><span id="themeIcon" aria-hidden="true">☾</span><span id="themeLabel">Tungi rejim</span></button>
+    </header>
+
+    <section class="calendar-panel" aria-label="Kun tanlash">
+      <div class="calendar-top">
+        <div>
+          <div class="date-caption">Davomat uchun kunni tanlang</div>
+          <div class="date-title" id="dateReadable">Bugungi kun</div>
+        </div>
+        <div class="week-controls" aria-label="Haftani o‘zgartirish">
+          <button class="week-button" id="previousWeek" type="button" aria-label="Oldingi hafta">← Oldingi</button>
+          <button class="week-button" id="todayButton" type="button">Bugun</button>
+          <button class="week-button" id="nextWeek" type="button" aria-label="Keyingi hafta">Keyingi →</button>
+        </div>
+      </div>
+      <div class="day-strip" id="dayCards" aria-label="Haftaning kunlari"></div>
+    </section>
+
+    <nav class="tabs" aria-label="Asosiy bo‘limlar">
+      <button class="tab active" data-page="attendancePage" type="button">✓ &nbsp; Davomat</button>
+      <button class="tab" data-page="schedulePage" type="button">▦ &nbsp; Kunlik dars rejasi</button>
+    </nav>
+
+    <!-- 1-SAHIFA: UMUMIY KUNLIK DAVOMAT -->
+    <section class="page active" id="attendancePage">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+        <div>
+          <h1 class="page-heading">O‘quvchilar davomatini belgilang</h1>
+          <p class="page-help" style="margin-bottom:0">Har bir o‘quvchi uchun “Bor” yoki “Yo‘q” tugmasini bosing.</p>
+        </div>
+        <button class="primary-button" id="showAddStudent" type="button">＋ O‘quvchi qo‘shish</button>
+      </div>
+
+      <!-- O'QUVCHI QO'SHISH FORMASI -->
+      <form class="form-wrap" id="studentForm">
+        <div class="form-title">Yangi o‘quvchi qo‘shish</div>
+        <div class="form-grid-student">
+          <div class="field">
+            <label for="studentNameInput">Familiyasi va Ismi *</label>
+            <input id="studentNameInput" placeholder="Masalan: Karimov Jasur" required>
+          </div>
+          <div class="field">
+            <label for="studentPhoneInput">Telefon raqami (ixtiyoriy)</label>
+            <input id="studentPhoneInput" placeholder="+998 90 123 45 67">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="secondary-button" id="cancelAddStudent" type="button">Bekor qilish</button>
+          <button class="primary-button" type="submit">O‘quvchini saqlash</button>
+        </div>
+      </form>
+
+      <div class="surface">
+        <div class="list-heading">
+          <div class="list-heading-left">
+            <strong>O‘quvchilar ro‘yxati</strong>
+            <span id="attendanceHeaderCount">0 nafar o‘quvchi</span>
+          </div>
+          <div>
+            <button class="secondary-button" id="markAllPresentBtn" type="button" style="min-height:36px; padding:6px 12px; font-size:13px;">✓ Barchasi “Bor”</button>
+          </div>
+        </div>
+        <div class="student-list" id="generalStudentList"></div>
+        <div class="summary" id="generalSummary" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- 2-SAHIFA: KUNLIK DARS REJASI -->
+    <section class="page" id="schedulePage">
+      <div id="scheduleListView">
+        <div class="schedule-toolbar">
+          <div>
+            <h1 class="page-heading">Kunlik dars rejasi</h1>
+            <p class="page-help" style="margin-bottom:0">Darsni tanlang va shu dars uchun davomat qiling.</p>
+          </div>
+          <button class="primary-button" id="showAddLesson" type="button">＋ Dars qo‘shish</button>
+        </div>
+
+        <!-- DARS QO'SHISH FORMASI -->
+        <form class="form-wrap" id="lessonForm">
+          <div class="form-title">Yangi dars</div>
+          <div class="form-grid">
+            <div class="field"><label for="lessonName">Fan nomi</label><input id="lessonName" name="lessonName" placeholder="Masalan, Matematika" maxlength="60" required></div>
+            <div class="field"><label for="lessonStart">Boshlanishi</label><input id="lessonStart" name="lessonStart" type="time" value="08:30" required></div>
+            <div class="field"><label for="lessonEnd">Tugashi</label><input id="lessonEnd" name="lessonEnd" type="time" value="09:15" required></div>
+          </div>
+          <div class="form-actions">
+            <button class="secondary-button" id="cancelAddLesson" type="button">Bekor qilish</button>
+            <button class="primary-button" type="submit">Darsni saqlash</button>
+          </div>
+        </form>
+
+        <div class="lesson-list" id="lessonList"></div>
+      </div>
+
+      <!-- DARS BO'YICHA DAVOMAT KO'RINIShI -->
+      <div id="lessonAttendanceView" hidden>
+        <div style="margin-bottom:14px"><button class="back-button" id="backToLessons" type="button">← Darslar ro‘yxatiga qaytish</button></div>
+        <div class="surface">
+          <div class="lesson-attendance-head">
+            <div>
+              <div class="date-caption" id="lessonAttendanceTime">Dars vaqti</div>
+              <h2 class="current-lesson-title" id="lessonAttendanceTitle">Dars nomi</h2>
+              <div class="current-lesson-meta">Davomatni har bir o‘quvchi uchun belgilang.</div>
+            </div>
+            <div>
+              <button class="secondary-button" id="markAllLessonPresentBtn" type="button" style="min-height:36px; padding:6px 12px; font-size:13px;">✓ Barchasi “Bor”</button>
+            </div>
+          </div>
+          <div class="student-list" id="lessonStudentList"></div>
+          <div class="summary" id="lessonSummary" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer-note">Ma’lumotlar Firebase Realtime Database bulutida real vaqtda saqlanadi.</p>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      // 1. SIZNING FIREBASE SOZLAMALARINGIZ (davomat-9cb5b)
+      const firebaseConfig = {
+        apiKey: "AIzaSyC6vJ7SFVLeSEdM0NPg5AlDaJH-VUEeP70",
+        authDomain: "davomat-9cb5b.firebaseapp.com",
+        databaseURL: "https://davomat-9cb5b-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "davomat-9cb5b",
+        storageBucket: "davomat-9cb5b.firebasestorage.app",
+        messagingSenderId: "216893010577",
+        appId: "1:216893010577:web:96d8b1701c456fd22ac530",
+        measurementId: "G-3MQH83735W"
+      };
+
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      const db = firebase.database();
+
+      // 2. STATE (HOLAT) - FAKE MA'LUMOTLAR OLIB TASHLANDI!
+      let STUDENTS = []; // Firebase-dan yuklanadi
+      const THEME_KEY = 'sinfly-theme-v2';
+      const today = new Date();
+      const localDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      
+      const state = { 
+        date: localDate(today), 
+        page: 'attendancePage', 
+        activeLessonId: null, 
+        data: { 
+          attendance: {}, 
+          lessons: {} 
+        } 
+      };
+
+      const $ = (id) => document.getElementById(id);
+
+      // 3. FIREBASE BILAN REAL-TIME SINXRONIZATSIYA
+      function initFirebaseSync() {
+        // O'quvchilarni tinglash
+        db.ref('students').on('value', snapshot => {
+          const val = snapshot.val();
+          STUDENTS = [];
+          if (val) {
+            Object.keys(val).forEach(id => {
+              STUDENTS.push({ id, name: val[id].name, phone: val[id].phone || '' });
+            });
+          }
+          STUDENTS.sort((a, b) => a.name.localeCompare(b.name));
+          render();
+        });
+
+        // Darslarni tinglash
+        db.ref('lessons').on('value', snapshot => {
+          state.data.lessons = snapshot.val() || {};
+          render();
+        });
+
+        // Davomatni tinglash
+        db.ref('attendance').on('value', snapshot => {
+          state.data.attendance = snapshot.val() || {};
+          render();
+        });
+      }
+
+      function escapeHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+      }
+
+      function dateAttendanceKey(date, lessonId) { 
+        return lessonId ? `${date}__lesson__${lessonId}` : `${date}__general`; 
+      }
+
+      function getAttendance(date, lessonId) { 
+        const key = dateAttendanceKey(date, lessonId);
+        return state.data.attendance[key] || {}; 
+      }
+
+      function setAttendance(studentId, status, lessonId) {
+        const key = dateAttendanceKey(state.date, lessonId || null);
+        const current = (state.data.attendance[key] && state.data.attendance[key][studentId]) || '';
+        
+        // Agar o'sha holat ustiga qayta bossa, bekor qiladi
+        const newStatus = (current === status) ? null : status;
+
+        if (newStatus === null) {
+          db.ref(`attendance/${key}/${studentId}`).remove();
+        } else {
+          db.ref(`attendance/${key}/${studentId}`).set(newStatus);
+        }
+        showToast("Saqlandi");
+      }
+
+      function markAll(status, lessonId) {
+        if (!STUDENTS.length) return;
+        const key = dateAttendanceKey(state.date, lessonId || null);
+        const updates = {};
+        STUDENTS.forEach(s => {
+          updates[s.id] = status;
+        });
+        db.ref(`attendance/${key}`).set(updates);
+        showToast("Barcha o‘quvchilar belgilandi");
+      }
+
+      function currentLessons() { 
+        return Array.isArray(state.data.lessons[state.date]) ? state.data.lessons[state.date] : []; 
+      }
+
+      function lessonsForDate(date) { 
+        return Array.isArray(state.data.lessons[date]) ? state.data.lessons[date] : []; 
+      }
+
+      function initials(name) { 
+        return (name || '').split(/\s+/).slice(0,2).map(p => p[0]).join('').toUpperCase(); 
+      }
+
+      function counts(attendance) {
+        const values = STUDENTS.map(s => attendance[s.id]);
+        return { 
+          present: values.filter(x => x === 'present').length, 
+          absent: values.filter(x => x === 'absent').length, 
+          pending: values.filter(x => !x).length 
+        };
+      }
+
+      function dailyRollup(date) {
+        const general = state.data.attendance[dateAttendanceKey(date, null)] || {};
+        const lessons = lessonsForDate(date);
+        const all = [general, ...lessons.map(lesson => state.data.attendance[dateAttendanceKey(date, lesson.id)] || {})];
+        const rolled = {};
+        for (const student of STUDENTS) {
+          const marks = all.map(record => record[student.id]).filter(Boolean);
+          rolled[student.id] = marks.includes('present') ? 'present' : marks.includes('absent') ? 'absent' : '';
+        }
+        const c = counts(rolled);
+        const markedLessons = lessons.filter(lesson => {
+          const lessonCounts = counts(state.data.attendance[dateAttendanceKey(date, lesson.id)] || {});
+          return lessonCounts.pending < STUDENTS.length;
+        }).length;
+        return { ...c, marked: STUDENTS.length - c.pending, total: STUDENTS.length, lessonCount: lessons.length, markedLessons };
+      }
+
+      function weekStart(dateValue) {
+        const date = new Date(`${dateValue}T12:00:00`);
+        const offset = (date.getDay() + 6) % 7;
+        date.setDate(date.getDate() - offset);
+        return date;
+      }
+
+      function renderDayCards() {
+        const start = weekStart(state.date);
+        const selectedDate = state.date;
+        const todayString = localDate(new Date());
+        const dayNames = ['Dush', 'Sesh', 'Chor', 'Pay', 'Juma', 'Shan', 'Yak'];
+        const cards = [];
+        for (let index = 0; index < 7; index++) {
+          const date = new Date(start);
+          date.setDate(start.getDate() + index);
+          const dateValue = localDate(date);
+          const c = dailyRollup(dateValue);
+          const stateClass = c.marked === 0 ? 'pending' : c.pending === 0 ? 'done' : 'partial';
+          const status = c.marked === 0 ? 'Davomat olinmagan' : c.pending === 0 ? 'Davomat olingan' : 'Qisman belgilangan';
+          const month = new Intl.DateTimeFormat('uz-UZ', { month: 'short' }).format(date).replace('.', '');
+          const lessonsLine = c.lessonCount ? `<div class="day-lessons">Darslar: ${c.markedLessons}/${c.lessonCount}</div>` : '';
+          cards.push(`<button type="button" class="day-card ${dateValue === selectedDate ? 'active' : ''} ${dateValue === todayString ? 'today' : ''}" data-day="${dateValue}" aria-pressed="${dateValue === selectedDate}">
+            <span class="day-name">${dayNames[index]}</span>
+            <span class="day-number">${date.getDate()}</span>
+            <span class="day-month">${escapeHtml(month)}</span>
+            <span class="day-status ${stateClass}">${status}</span>
+            <span class="day-counts"><span class="day-present">✓ ${c.present} bor</span><br><span class="day-absent">✕ ${c.absent} yo‘q</span></span>
+            ${lessonsLine}
+          </button>`);
+        }
+        $('dayCards').innerHTML = cards.join('');
+      }
+
+      function studentListHtml(attendance, lessonId) {
+        if (!STUDENTS.length) {
+          return `<div class="empty" style="border:0; padding:28px 10px;">
+            <div class="empty-title">Hozircha o‘quvchilar yo‘q</div>
+            <div class="empty-text">Yuqoridagi “O‘quvchi qo‘shish” tugmasini bosing.</div>
+          </div>`;
+        }
+
+        return STUDENTS.map((student) => {
+          const status = attendance[student.id] || '';
+          const stateText = status === 'present' ? 'Bor deb belgilandi' : status === 'absent' ? 'Yo‘q deb belgilandi' : 'Hali belgilanmagan';
+          return `<div class="student">
+            <div class="student-main">
+              <div class="avatar" aria-hidden="true">${escapeHtml(initials(student.name))}</div>
+              <div>
+                <div class="student-name">${escapeHtml(student.name)}</div>
+                <div class="student-state">${stateText}</div>
+              </div>
+            </div>
+            <div class="actions" role="group" aria-label="${escapeHtml(student.name)} davomatini belgilang">
+              <button type="button" class="status-button present ${status === 'present' ? 'active' : ''}" aria-pressed="${status === 'present'}" data-student="${student.id}" data-status="present" ${lessonId ? `data-lesson="${escapeHtml(lessonId)}"` : ''}>✓ Bor</button>
+              <button type="button" class="status-button absent ${status === 'absent' ? 'active' : ''}" aria-pressed="${status === 'absent'}" data-student="${student.id}" data-status="absent" ${lessonId ? `data-lesson="${escapeHtml(lessonId)}"` : ''}>✕ Yo‘q</button>
+              <button type="button" class="delete-student-btn" data-delete-student="${student.id}" data-student-name="${escapeHtml(student.name)}" title="O‘quvchini ro‘yxatdan o‘chirish">✕</button>
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      function summaryHtml(attendance) {
+        const c = counts(attendance);
+        return `<span class="good">Bor: <b>${c.present}</b></span><span class="bad">Yo‘q: <b>${c.absent}</b></span><span>Belgilanmagan: <b>${c.pending}</b></span>`;
+      }
+
+      function renderGeneralAttendance() {
+        const attendance = getAttendance(state.date, null);
+        $('generalStudentList').innerHTML = studentListHtml(attendance, null);
+        $('generalSummary').innerHTML = summaryHtml(attendance);
+        $('attendanceHeaderCount').textContent = `${STUDENTS.length} nafar o‘quvchi`;
+      }
+
+      function renderLessons() {
+        renderDayCards();
+        const lessons = currentLessons().slice().sort((a,b) => a.start.localeCompare(b.start));
+        if (!lessons.length) {
+          $('lessonList').innerHTML = `<div class="empty"><div class="empty-title">Bu kunga dars kiritilmagan</div><div class="empty-text">Dars rejasini boshlash uchun “Dars qo‘shish” tugmasini bosing.</div><button class="primary-button" type="button" id="emptyAddLesson">＋ Dars qo‘shish</button></div>`;
+          $('emptyAddLesson').addEventListener('click', openLessonForm);
+          return;
+        }
+        $('lessonList').innerHTML = lessons.map((lesson, index) => {
+          const attendance = getAttendance(state.date, lesson.id);
+          const c = counts(attendance);
+          const allMarked = c.pending === 0 && STUDENTS.length > 0;
+          return `<article class="lesson-card">
+            <div>
+              <div class="lesson-topline"><span class="lesson-number">${index+1}-dars</span><span class="lesson-time">${escapeHtml(lesson.start)} – ${escapeHtml(lesson.end)}</span></div>
+              <div class="lesson-name">${escapeHtml(lesson.name)}</div>
+              <div class="lesson-progress"><strong style="color:var(--present)">Bor: ${c.present}</strong> · <strong style="color:var(--absent)">Yo‘q: ${c.absent}</strong> · ${allMarked ? 'Davomat tugallandi' : `Belgilandi: <strong>${STUDENTS.length-c.pending}/${STUDENTS.length}</strong>`}</div>
+            </div>
+            <div class="lesson-buttons"><button type="button" class="primary-button take-button" data-open-lesson="${escapeHtml(lesson.id)}">Davomatni belgilash →</button><button type="button" class="delete-lesson" data-delete-lesson="${escapeHtml(lesson.id)}">Darsni o‘chirish</button></div>
+          </article>`;
+        }).join('');
+      }
+
+      function renderLessonAttendance() {
+        const lesson = currentLessons().find(x => x.id === state.activeLessonId);
+        if (!lesson) { state.activeLessonId = null; $('lessonAttendanceView').hidden = true; $('scheduleListView').hidden = false; return; }
+        $('lessonAttendanceTime').textContent = `${lesson.start} – ${lesson.end}`;
+        $('lessonAttendanceTitle').textContent = lesson.name;
+        const attendance = getAttendance(state.date, lesson.id);
+        $('lessonStudentList').innerHTML = studentListHtml(attendance, lesson.id);
+        $('lessonSummary').innerHTML = summaryHtml(attendance);
+      }
+
+      function renderDate() {
+        const date = new Date(`${state.date}T12:00:00`);
+        $('dateReadable').textContent = new Intl.DateTimeFormat('uz-UZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+        renderDayCards();
+      }
+
+      function selectDate(dateValue) {
+        if (!dateValue) return;
+        state.date = dateValue;
+        state.activeLessonId = null;
+        $('scheduleListView').hidden = false;
+        $('lessonAttendanceView').hidden = true;
+        closeLessonForm();
+        render();
+      }
+
+      function shiftWeek(amount) {
+        const date = new Date(`${state.date}T12:00:00`);
+        date.setDate(date.getDate() + amount * 7);
+        selectDate(localDate(date));
+      }
+
+      function render() {
+        renderDate();
+        renderGeneralAttendance();
+        if (state.activeLessonId) renderLessonAttendance();
+        else renderLessons();
+      }
+
+      function showPage(pageId) {
+        state.page = pageId;
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('active', tab.dataset.page === pageId));
+        document.querySelectorAll('.page').forEach(page => page.classList.toggle('active', page.id === pageId));
+        if (pageId === 'schedulePage') {
+          state.activeLessonId = null;
+          $('scheduleListView').hidden = false;
+          $('lessonAttendanceView').hidden = true;
+          renderLessons();
+        }
+      }
+
+      function openLessonAttendance(id) {
+        state.activeLessonId = id;
+        $('scheduleListView').hidden = true;
+        $('lessonAttendanceView').hidden = false;
+        renderLessonAttendance();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // FORMALAR BOSHQARUVI
+      function openLessonForm() {
+        $('lessonForm').classList.add('open');
+        $('lessonName').focus();
+      }
+      function closeLessonForm() {
+        $('lessonForm').classList.remove('open');
+        $('lessonForm').reset();
+        $('lessonStart').value = '08:30';
+        $('lessonEnd').value = '09:15';
+      }
+
+      function openStudentForm() {
+        $('studentForm').classList.add('open');
+        $('studentNameInput').focus();
+      }
+      function closeStudentForm() {
+        $('studentForm').classList.remove('open');
+        $('studentForm').reset();
+      }
+
+      let toastTimer;
+      function showToast(message) {
+        const toast = $('toast'); 
+        toast.textContent = message; 
+        toast.classList.add('show');
+        clearTimeout(toastTimer); 
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2300);
+      }
+
+      function setTheme(theme) {
+        document.documentElement.dataset.theme = theme;
+        try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+        const dark = theme === 'dark';
+        $('themeIcon').textContent = dark ? '☀' : '☾';
+        $('themeLabel').textContent = dark ? 'Kunduzgi rejim' : 'Tungi rejim';
+        document.querySelector('meta[name="theme-color"]').content = dark ? '#161816' : '#f7f7f5';
+      }
+
+      // HODISALAR (EVENTS)
+      document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => showPage(tab.dataset.page)));
+      $('previousWeek').addEventListener('click', () => shiftWeek(-1));
+      $('nextWeek').addEventListener('click', () => shiftWeek(1));
+      $('todayButton').addEventListener('click', () => selectDate(localDate(new Date())));
+
+      $('markAllPresentBtn').addEventListener('click', () => markAll('present', null));
+      $('markAllLessonPresentBtn').addEventListener('click', () => markAll('present', state.activeLessonId));
+
+      document.body.addEventListener('click', event => {
+        const dayCard = event.target.closest('[data-day]');
+        if (dayCard) { selectDate(dayCard.dataset.day); return; }
+
+        const statusButton = event.target.closest('[data-student][data-status]');
+        if (statusButton) {
+          setAttendance(statusButton.dataset.student, statusButton.dataset.status, statusButton.dataset.lesson || null);
+          return;
+        }
+
+        const deleteStudentBtn = event.target.closest('[data-delete-student]');
+        if (deleteStudentBtn) {
+          const id = deleteStudentBtn.dataset.deleteStudent;
+          const name = deleteStudentBtn.dataset.studentName;
+          if (window.confirm(`“${name}”ni o‘quvchilar ro‘yxatidan o‘chirasizmi?`)) {
+            db.ref(`students/${id}`).remove().then(() => showToast("O‘quvchi o‘chirildi."));
+          }
+          return;
+        }
+
+        const openButton = event.target.closest('[data-open-lesson]');
+        if (openButton) { openLessonAttendance(openButton.dataset.openLesson); return; }
+
+        const deleteButton = event.target.closest('[data-delete-lesson]');
+        if (deleteButton) {
+          const lesson = currentLessons().find(x => x.id === deleteButton.dataset.deleteLesson);
+          if (!lesson) return;
+          if (window.confirm(`“${lesson.name}” darsini o‘chirasizmi?`)) {
+            const updated = currentLessons().filter(x => x.id !== lesson.id);
+            db.ref(`lessons/${state.date}`).set(updated);
+            if (state.activeLessonId === lesson.id) state.activeLessonId = null;
+            showToast('Dars o‘chirildi.');
+          }
+        }
+      });
+
+      // O'quvchi qo'shish
+      $('showAddStudent').addEventListener('click', () => {
+        if ($('studentForm').classList.contains('open')) closeStudentForm(); else openStudentForm();
+      });
+      $('cancelAddStudent').addEventListener('click', closeStudentForm);
+      $('studentForm').addEventListener('submit', event => {
+        event.preventDefault();
+        const name = $('studentNameInput').value.trim();
+        const phone = $('studentPhoneInput').value.trim();
+        if (!name) { showToast('Iltimos, o‘quvchi ismini kiriting.'); return; }
+        
+        db.ref('students').push({
+          name: name,
+          phone: phone || '',
+          createdAt: new Date().toISOString()
+        }).then(() => {
+          closeStudentForm();
+          showToast("O‘quvchi qo‘shildi!");
+        });
+      });
+
+      // Dars qo'shish
+      $('showAddLesson').addEventListener('click', () => {
+        if ($('lessonForm').classList.contains('open')) closeLessonForm(); else openLessonForm();
+      });
+      $('cancelAddLesson').addEventListener('click', closeLessonForm);
+      $('lessonForm').addEventListener('submit', event => {
+        event.preventDefault();
+        const name = $('lessonName').value.trim();
+        const start = $('lessonStart').value;
+        const end = $('lessonEnd').value;
+        if (!name || !start || !end) { showToast('Iltimos, barcha maydonlarni to‘ldiring.'); return; }
+        if (start >= end) { showToast('Dars tugash vaqti boshlanishidan keyin bo‘lishi kerak.'); $('lessonEnd').focus(); return; }
+        
+        const lesson = { id: `lesson-${Date.now()}-${Math.random().toString(36).slice(2,7)}`, name, start, end };
+        const currentList = currentLessons();
+        currentList.push(lesson);
+        
+        db.ref(`lessons/${state.date}`).set(currentList).then(() => {
+          closeLessonForm();
+          showToast('Dars rejaga qo‘shildi.');
+        });
+      });
+
+      $('backToLessons').addEventListener('click', () => {
+        state.activeLessonId = null;
+        $('lessonAttendanceView').hidden = true;
+        $('scheduleListView').hidden = false;
+        renderLessons();
+      });
+
+      $('themeToggle').addEventListener('click', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+
+      // 4. BOSHLASH
+      initFirebaseSync();
+      try { setTheme(localStorage.getItem(THEME_KEY) || 'light'); } catch (e) { setTheme('light'); }
+    })();
+  </script>
+</body>
+</html>
